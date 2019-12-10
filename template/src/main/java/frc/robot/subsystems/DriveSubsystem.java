@@ -23,5 +23,6 @@ public class DriveSubsystem extends SubsystemBase {
         rightSlave.follow(rightMaster);
 
         drive = new DifferentialDrive(leftMaster, rightMaster);
+        drive.setSafetyEnabled(true);
     }
 }
