@@ -7,46 +7,25 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+// import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+// import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
-import frc.robot.commands.DriveWithJoystick;
+//import frc.robot.commands.DriveWithJoystick;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import com.revrobotics.CANDigitalInput;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANDigitalInput.LimitSwitchPolarity;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 public class Drivetrain extends SubsystemBase {
-  WPI_TalonSRX leftMaster;
-  WPI_TalonSRX leftSlave1;
-  WPI_TalonSRX leftSlave2;
-  
-  WPI_TalonSRX rightMaster;
-  WPI_TalonSRX rightSlave1;
-  WPI_TalonSRX rightSlave2;
-  public DifferentialDrive drive;
-  
+  public CANSparkMax motor1;
+  public CANSparkMax motor2;
   public Drivetrain() {
-    leftMaster = new WPI_TalonSRX(1);
-    leftSlave1 = new WPI_TalonSRX(3);
-    leftSlave2 = new WPI_TalonSRX(4);
-
-    rightMaster = new WPI_TalonSRX(2);
-    rightSlave1 = new WPI_TalonSRX(5);
-    rightSlave2 = new WPI_TalonSRX(6);
-    drive = new DifferentialDrive(leftMaster, rightMaster);
-
-    leftMaster.setInverted(false);
-    leftSlave1.setInverted(false);
-    leftSlave2.setInverted(true);
-    leftSlave2.follow(leftMaster);
-    leftSlave1.follow(leftMaster);
     
-    rightMaster.setInverted(false);
-    rightSlave1.setInverted(false);
-    rightSlave2.setInverted(false);
-    rightSlave2.follow(rightMaster);
-    rightSlave1.follow(rightMaster);
-
-    
+    motor1 = new CANSparkMax(1, MotorType.kBrushless);
+   // motor2 = new CANSparkMax(2, MotorType.kBrushless);
   }
 
   @Override
