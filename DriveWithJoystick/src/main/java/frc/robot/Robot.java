@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj.Joystick;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.commands.DriveWithJoystick;
+import frc.robot.commands.TurnToAngle;
 import frc.robot.commands.VControl;
 import frc.robot.commands.getAutonomousCommand;
 
@@ -45,6 +46,8 @@ public class Robot extends TimedRobot {
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick(driveSubsystem);
   public static getAutonomousCommand driveTrajectory = new getAutonomousCommand();
 
+  Joystick joystick = new Joystick(0);
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -52,8 +55,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
     driveSubsystem.setDefaultCommand(driveWithJoystick);
-    JoystickButton vControlButton = new JoystickButton(Control.getInstance().drive, 1);
-    vControlButton.whileHeld(new VControl());
+
   }
 
   /**
@@ -77,6 +79,12 @@ public class Robot extends TimedRobot {
     driveSubsystem.resetPose(
       new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
     );
+  }
+
+  @Override
+  public void teleopPeriodic() {
+    if(joystick.getRawButtonPressed(1))
+      (new TurnToAngle(100)).schedule();
   }
 
   @Override

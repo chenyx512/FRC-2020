@@ -7,14 +7,15 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Robot;
 
 public class TurnToAngle extends CommandBase {
-  private static final double P = 1;
-  public double angle;
+  private static final double P = 0.0166;
+  public double targetAngle;
   public TurnToAngle(double _angle) {
-    angle = _angle;
+    targetAngle = _angle;
   }
 
   // Called when the command is initially scheduled.
@@ -26,8 +27,11 @@ public class TurnToAngle extends CommandBase {
   @Override
   public void execute() {
     double currentAngle = Robot.driveSubsystem.pigeon.getFusedHeading();
-    double error = currentAngle - angle;
-    Robot.driveSubsystem.outputMetersPerSecond(P * error, P * error * -1);
+    double error = ((targetAngle - currentAngle)%360+360)%360;
+    if(error>180)
+      error -= 360;
+    System.out.printf("target %f cur %f error %f\n", targetAngle, currentAngle, error);
+    Robot.driveSubsystem.outputMetersPerSecond(P * error * -1, P * error);
   }
 
   // Called once the command ends or is interrupted.

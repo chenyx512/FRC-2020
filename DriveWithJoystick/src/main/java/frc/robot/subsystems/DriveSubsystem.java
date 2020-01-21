@@ -125,8 +125,8 @@ public class DriveSubsystem extends SubsystemBase {
   public void outputMetersPerSecond(double leftMPS, double rightMPS) {
     double leftSpeed = leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
     double rightSpeed = rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-    System.out.printf("L set %1.3f actual %1.3f err %1.3f || R set %1.3f actual %1.3f err %1.3f\n", 
-        leftMPS, leftSpeed, leftMPS - leftSpeed , rightMPS, rightSpeed, rightMPS - rightSpeed);
+    // System.out.printf("L set %1.3f actual %1.3f err %1.3f || R set %1.3f actual %1.3f err %1.3f\n", 
+    //     leftMPS, leftSpeed, leftMPS - leftSpeed , rightMPS, rightSpeed, rightMPS - rightSpeed);
     // set value position diff / 100ms (see set documentation)
     leftMaster.set(ControlMode.Velocity, leftMPS * Constants.kEncoderUnitPerMeter / 10, 
         DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS);
