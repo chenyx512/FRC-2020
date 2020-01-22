@@ -12,13 +12,13 @@ import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj.Joystick;
 
-public class DriveWithJoystick extends CommandBase {
+public class run extends CommandBase {
   Drivetrain drive;
   Joystick joystick;
   /**
    * Creates a new DriveWithJoystick.
    */
-  public DriveWithJoystick(Drivetrain _drive, Joystick _joystick) {
+  public run(Drivetrain _drive, Joystick _joystick) {
     drive = _drive;
     joystick = _joystick;
     this.addRequirements(_drive);
@@ -32,11 +32,8 @@ public class DriveWithJoystick extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    drive.drive.curvatureDrive(
-      Robot.joystick.getRawAxis(1) * -1,
-      Robot.joystick.getRawAxis(0),
-      Robot.joystick.getRawButton(2)
-    );
+    drive.motor1.set(joystick.getY());
+    // drive.motor2.set(joystick.getY());
   }
 
   // Called once the command ends or is interrupted.

@@ -33,10 +33,11 @@ public class Drivetrain extends SubsystemBase {
     rightSlave1 = new WPI_TalonSRX(5);
     rightSlave2 = new WPI_TalonSRX(6);
     drive = new DifferentialDrive(leftMaster, rightMaster);
+    drive.setSafetyEnabled(true);
 
     leftMaster.setInverted(false);
     leftSlave1.setInverted(false);
-    leftSlave2.setInverted(true);
+    leftSlave2.setInverted(false);
     leftSlave2.follow(leftMaster);
     leftSlave1.follow(leftMaster);
     
