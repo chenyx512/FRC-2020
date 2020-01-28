@@ -21,10 +21,13 @@ public class Constants {
   public static final double kv = 3.15 / 12;
   public static final double ka = 0.3912 / 12;
 
-  // talons
+  // drivetrain talons
   public static final Gains DRIVETRAIN_VELOCITY_GAINS = new Gains(4, 0, 10, 0, 20, 1);
   public static final int DRIVETRAIN_VELOCITY_SLOT = 0;
   
+  // shooter sparks
+  public static final Gains SHOOTER_V_GAINS = new Gains(5e-5, 0, 0, 0, 0, 1);
+
   // Ramsete
   public static final double kRamseteB = 2;
   public static final double kRamseteZeta = 0.7;
