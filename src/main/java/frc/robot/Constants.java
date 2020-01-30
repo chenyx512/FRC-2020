@@ -26,7 +26,7 @@ public class Constants {
   public static final int DRIVETRAIN_VELOCITY_SLOT = 0;
   
   // shooter sparks
-  public static final Gains SHOOTER_V_GAINS = new Gains(5e-5, 0, 0, 0, 0, 1);
+  public static final Gains SHOOTER_V_GAINS = new Gains(2e-4, 0, 0, 1.0 / 5700, 0, 1);
 
   // Ramsete
   public static final double kRamseteB = 2;
