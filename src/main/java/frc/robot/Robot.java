@@ -6,16 +6,20 @@ import edu.wpi.first.wpilibj.geometry.*;
 import edu.wpi.first.wpilibj2.command.*;
 
 import frc.robot.commands.DriveWithJoystick;
+import frc.robot.commands.MaintainAngle;
 import frc.robot.commands.ShootWithSlider;
 import frc.robot.subsystems.BallShooter;
+import frc.robot.subsystems.Coprocessor;
 import frc.robot.subsystems.DriveSubsystem;
 
 
 public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
-  public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick(driveSubsystem);
+  public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
   public static BallShooter ballShooter = new BallShooter();
-  public static ShootWithSlider shootWithSlider = new ShootWithSlider(ballShooter);
+  public static ShootWithSlider shootWithSlider = new ShootWithSlider();
+  public static Coprocessor coprocessor = new Coprocessor();
+  public static MaintainAngle maintainAngle = new MaintainAngle();
 
   @Override
   public void robotInit() {
@@ -26,6 +30,9 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     CommandScheduler.getInstance().run();
+    if(Control.getInstance().isMaintainAngle() && !maintainAngle.isScheduled()) {
+      maintainAngle.schedule();
+    }
   }
 
   @Override

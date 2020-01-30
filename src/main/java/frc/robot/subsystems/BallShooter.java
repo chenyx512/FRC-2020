@@ -17,9 +17,9 @@ public class BallShooter extends SubsystemBase {
   public CANPIDController PIDController;
 
   public BallShooter() {
-    encoder = master.getEncoder();
     master = new CANSparkMax(1, MotorType.kBrushless);
     slave = new CANSparkMax(2, MotorType.kBrushless);
+    encoder = master.getEncoder();
 
     setSpark(master);
     setSpark(slave);
@@ -47,6 +47,7 @@ public class BallShooter extends SubsystemBase {
   private void setPID(){
     PIDController.setP(Constants.SHOOTER_V_GAINS.kP);
     PIDController.setI(0);
+    PIDController.setFF(Constants.SHOOTER_V_GAINS.kF);
     PIDController.setD(Constants.SHOOTER_V_GAINS.kD);
     PIDController.setOutputRange(-1, 1);
   }

@@ -22,6 +22,11 @@ public class Control {
 
     public Joystick drive = new Joystick(0);
 
+    // maintain angle
+    public boolean isMaintainAngle() {
+        return drive.getRawButton(1);
+    }
+
     // drivetrain starts
     public boolean isQuickTurn() {
         return drive.getRawButton(2);
