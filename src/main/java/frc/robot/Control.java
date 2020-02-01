@@ -29,7 +29,8 @@ public class Control {
         maintainAngleButton.whileHeld(new MaintainAngle());
 
         JoystickButton recalibrateFieldButton = new JoystickButton(drive, 4);
-        recalibrateFieldButton.whenPressed(new RecalibrateField().withTimeout(1));
+        // this is not interruptible unless after a second
+        recalibrateFieldButton.whenPressed(new RecalibrateField().withTimeout(1), false);
     }
 
     // drivetrain starts

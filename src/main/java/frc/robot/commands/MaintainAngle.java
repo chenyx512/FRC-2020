@@ -17,10 +17,10 @@ public class MaintainAngle extends InstantCommand {
 
   @Override
   public void execute() {
-    if(!Robot.coprocessor.isWorking() || !Robot.coprocessor.isTargetFound){
-      System.out.println("coprocessor not working, return");
+    if(!Robot.coprocessor.isConnected || !Robot.coprocessor.isTargetGood){
+      System.out.println("coprocessor and/or CV not working, return");
       return;
-    }else if (!Robot.coprocessor.isFieldCalibrated() && 
+    }else if ((!Robot.coprocessor.isPoseGood || !Robot.coprocessor.isFieldCalibrated()) && 
                !Robot.coprocessor.isTargetFound) {
       System.out.println("field not calibrated and no target found, return");
       return;

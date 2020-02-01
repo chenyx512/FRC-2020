@@ -60,12 +60,6 @@ public class Coprocessor extends SubsystemBase {
     isPoseGood = odomTable.getEntry("pose_good").getBoolean(false);
   }
 
-  /** This method checks if Nano is working as expected
-   */
-  public boolean isWorking() {
-    return isConnected && isTargetGood && isPoseGood;
-  }
-
   public boolean isFieldCalibrated() {
     return odomTable.getEntry("field_calibration_good").getBoolean(false);
   }

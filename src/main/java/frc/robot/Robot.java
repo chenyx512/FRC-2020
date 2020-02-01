@@ -16,16 +16,16 @@ import frc.robot.subsystems.DriveSubsystem;
 
 
 public class Robot extends TimedRobot {
-  // warning: no subsystems should call Control.getInstance() in their constructor
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
   public static BallShooter ballShooter = new BallShooter();
   public static ShootWithSlider shootWithSlider = new ShootWithSlider();
   public static Coprocessor coprocessor = new Coprocessor();
-  public static MaintainAngle maintainAngle = new MaintainAngle();
 
   @Override
   public void robotInit() {
+    // warning: no subsystems should call Control.getInstance() in their constructor
+    Control.getInstance(); // ensures keys get binded
     driveSubsystem.setDefaultCommand(driveWithJoystick);
     ballShooter.setDefaultCommand(shootWithSlider);
   }
