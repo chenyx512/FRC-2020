@@ -1,8 +1,10 @@
 package frc.robot;
 
 
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.geometry.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 import frc.robot.commands.DriveWithJoystick;
@@ -14,6 +16,7 @@ import frc.robot.subsystems.DriveSubsystem;
 
 
 public class Robot extends TimedRobot {
+  // warning: no subsystems should call Control.getInstance() in their constructor
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
   public static BallShooter ballShooter = new BallShooter();
@@ -27,12 +30,16 @@ public class Robot extends TimedRobot {
     ballShooter.setDefaultCommand(shootWithSlider);
   }
 
+  /* RobotPeriodic is called after the coresponding periodic of the stage,
+  *  such as teleopPeriodic
+  */ 
   @Override
   public void robotPeriodic() {
+    // sequence of running: subsystems, buttons, commands
+    if(Control.getInstance().isEStop())
+      CommandScheduler.getInstance().cancelAll();
     CommandScheduler.getInstance().run();
-    if(Control.getInstance().isMaintainAngle() && !maintainAngle.isScheduled()) {
-      maintainAngle.schedule();
-    }
+    NetworkTableInstance.getDefault().flush();
   }
 
   @Override

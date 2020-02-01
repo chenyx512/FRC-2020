@@ -15,7 +15,8 @@ public class Coprocessor extends SubsystemBase {
   // flags coresponding to connection of Nano, tracking camera, RGB camera
   public boolean isConnected, isPoseGood, isTargetGood;
   // values for maintaining angle
-  public double targetAbsAzm, poseAzm;
+  public double targetT265Azm, targetFieldAzm, t265Azm, fieldAzm;
+  public double targetRelativeDirRight;
   public boolean isTargetFound;
 
   private double lastClientTime;
@@ -29,8 +30,12 @@ public class Coprocessor extends SubsystemBase {
     checkConnection();
     
     isTargetFound = odomTable.getEntry("target_found").getBoolean(false);
-    targetAbsAzm = odomTable.getEntry("target_abs_azm").getDouble(0);
-    poseAzm = odomTable.getEntry("pose_t").getDouble(0);
+    targetT265Azm = odomTable.getEntry("target_t265_azm").getDouble(0);
+    t265Azm = odomTable.getEntry("t265_pose_t").getDouble(0);
+    targetFieldAzm = odomTable.getEntry("target_field_azm").getDouble(0);
+    fieldAzm = odomTable.getEntry("field_pose_t").getDouble(0);
+
+    targetRelativeDirRight = odomTable.getEntry("target_relative_dir_right").getDouble(0);
   }
 
   /** This method updates if Nano is working as expected
@@ -39,8 +44,10 @@ public class Coprocessor extends SubsystemBase {
     double clientTime = odomTable.getEntry("client_time").getDouble(0);
     if(clientTime == lastClientTime){
       disconnectCnt++;
-      if(disconnectCnt > 5)
+      if(disconnectCnt > 5){
         isConnected=false;
+        odomTable.getEntry("field_calibration_good").setBoolean(false);
+      }
     }
     else{
       disconnectCnt=0;
@@ -57,5 +64,9 @@ public class Coprocessor extends SubsystemBase {
    */
   public boolean isWorking() {
     return isConnected && isTargetGood && isPoseGood;
+  }
+
+  public boolean isFieldCalibrated() {
+    return odomTable.getEntry("field_calibration_good").getBoolean(false);
   }
 }

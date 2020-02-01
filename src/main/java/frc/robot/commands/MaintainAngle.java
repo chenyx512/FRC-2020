@@ -9,23 +9,31 @@ import frc.robot.Robot;
 
 public class MaintainAngle extends InstantCommand {
   private static final double P = 0.0166;
+  private double targetAngle, currentAngle;
 
   public MaintainAngle() {
     addRequirements(Robot.driveSubsystem);
   }
 
   @Override
-  public void initialize() {
-  }
-
-  @Override
   public void execute() {
     if(!Robot.coprocessor.isWorking() || !Robot.coprocessor.isTargetFound){
-      System.out.println("not satisfied stuff, return");
+      System.out.println("coprocessor not working, return");
       return;
+    }else if (!Robot.coprocessor.isFieldCalibrated() && 
+               !Robot.coprocessor.isTargetFound) {
+      System.out.println("field not calibrated and no target found, return");
+      return;
+    }else if (!Robot.coprocessor.isTargetFound) {
+      System.out.println("no visual, turning according to calibrated field pose");
+      targetAngle = Robot.coprocessor.targetFieldAzm;
+      currentAngle = Robot.coprocessor.fieldAzm;
+    }else {
+      targetAngle = Robot.coprocessor.targetT265Azm;
+      currentAngle = Robot.coprocessor.t265Azm;
     }
-    double currentAngle = Robot.coprocessor.poseAzm - 5;
-    double error = ((Robot.coprocessor.targetAbsAzm - currentAngle)%360+360)%360;
+    
+    double error = ((targetAngle - currentAngle)%360+360)%360;
     if(error>180)
       error -= 360;
     
