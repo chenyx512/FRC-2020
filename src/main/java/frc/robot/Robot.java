@@ -8,9 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 import frc.robot.commands.DriveWithJoystick;
-import frc.robot.commands.ShootWithSlider;
 import frc.robot.subsystems.BallHandler;
-import frc.robot.subsystems.BallShooter;
 import frc.robot.subsystems.Coprocessor;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.BallHandler.BallHandlerState;
@@ -21,7 +19,6 @@ public class Robot extends TimedRobot {
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
   public static BallHandler ballHandler = new BallHandler();
   public static Coprocessor coprocessor = new Coprocessor();
-  // warning: no subsystems should call Control.getInstance() in their constructor
   private static Control control = Control.getInstance();
 
   @Override
