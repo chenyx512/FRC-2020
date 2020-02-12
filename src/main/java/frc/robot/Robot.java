@@ -8,26 +8,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
 import frc.robot.commands.DriveWithJoystick;
-import frc.robot.commands.MaintainAngle;
 import frc.robot.commands.ShootWithSlider;
+import frc.robot.subsystems.BallHandler;
 import frc.robot.subsystems.BallShooter;
 import frc.robot.subsystems.Coprocessor;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 
 public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
-  public static BallShooter ballShooter = new BallShooter();
-  public static ShootWithSlider shootWithSlider = new ShootWithSlider();
+  public static BallHandler ballHandler = new BallHandler();
   public static Coprocessor coprocessor = new Coprocessor();
+  // warning: no subsystems should call Control.getInstance() in their constructor
+  private static Control control = Control.getInstance();
 
   @Override
   public void robotInit() {
-    // warning: no subsystems should call Control.getInstance() in their constructor
-    Control.getInstance(); // ensures keys get binded
     driveSubsystem.setDefaultCommand(driveWithJoystick);
-    ballShooter.setDefaultCommand(shootWithSlider);
   }
 
   /* RobotPeriodic is called after the coresponding periodic of the stage,
@@ -36,16 +35,23 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     // sequence of running: subsystems, buttons, commands
-    if(Control.getInstance().isEStop())
-      CommandScheduler.getInstance().cancelAll();
     CommandScheduler.getInstance().run();
     NetworkTableInstance.getDefault().flush();
   }
 
   @Override
-  public void teleopInit() {
-    driveSubsystem.resetPose(
-      new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
-    );
+  public void teleopPeriodic() {
+    if(Control.getInstance().isEStop()){
+      CommandScheduler.getInstance().cancelAll();
+      ballHandler.state = BallHandlerState.IDLE;
+      return;
+    }
+    // BallHandler
+    if (control.isIntake())
+      ballHandler.state = BallHandlerState.INTAKE;
+    else if (control.isShoot())
+      ballHandler.state = BallHandlerState.SHOOT;
+    else if(control.isEject())
+      ballHandler.state = BallHandlerState.EJECT;
   }
 }

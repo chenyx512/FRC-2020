@@ -8,14 +8,17 @@ import frc.robot.Robot;
 
 public class ShootWithSlider extends CommandBase {
   public ShootWithSlider() {
-    addRequirements(Robot.ballShooter);
+    // addRequirements(Robot.ballShooter);
   }
 
   @Override
   public void execute() {
-    double desiredRPM = 5700 * Control.getInstance().getSlider();
+    double power = Control.getInstance().getSlider();
+    if(power < 0.02)
+      power = 0;
+    double desiredRPM = 5700 * power;
     SmartDashboard.putNumber("shooter_desired_RPM", desiredRPM);
-    Robot.ballShooter.setRPM(desiredRPM);
+    // Robot.ballShooter.setRPM(desiredRPM);
     // Robot.ballShooter.master.set(Control.getInstance().getSlider());
   }
 

@@ -7,7 +7,8 @@ public class Constants {
   public static final boolean SEND_ENCODER_V = false;
 
   // encoder
-  public static final double kEncoderUnitPerMeter = 3000.0;
+  public static final double ENCODER_UNIT2METER = 11.0 / 50 * 24 / 50 * 6.25 * 0.0254;
+  public static final double ENCODER_UNIT2MPS = ENCODER_UNIT2METER / 60;
 
   // drivetrain physical characteristic
   public static final double kPDriveVel = 3.65;
@@ -50,3 +51,10 @@ public class Constants {
     }
   }
 }
+
+/*
+motor 11 to 50
+50 link 24
+24 to 50
+11.0 / 50 * 24 / 50 * 6.25 * 0.0254
+*/

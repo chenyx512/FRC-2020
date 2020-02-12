@@ -13,13 +13,13 @@ public class RecalibrateField extends CommandBase {
   public RecalibrateField() {
     // make sure there is no motion when this is performed
     addRequirements(Robot.driveSubsystem);
-    addRequirements(Robot.ballShooter);
+    // addRequirements(Robot.ballShooter);
   }
 
   @Override
   public void initialize() {
     System.out.println("start recalibrate field");
-    NetworkTableInstance.getDefault().getEntry("odom/field_calibration_start").setBoolean(true);
+    NetworkTableInstance.getDefault().getEntry("/odom/field_calib_start").setBoolean(true);
   }
 
   @Override

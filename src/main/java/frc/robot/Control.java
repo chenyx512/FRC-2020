@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.MaintainAngle;
 import frc.robot.commands.RecalibrateField;
 
 
@@ -13,8 +12,6 @@ import frc.robot.commands.RecalibrateField;
  */
 public class Control {
     private static Control instance;
-    public Joystick drive = new Joystick(0);
-
     public static Control getInstance() {
         if (instance == null)
             synchronized (Control.class) {
@@ -23,14 +20,13 @@ public class Control {
             }
         return instance;
     }
-
     private Control() {
-        JoystickButton maintainAngleButton = new JoystickButton(drive, 3);
-        maintainAngleButton.whileHeld(new MaintainAngle());
+    }
 
-        JoystickButton recalibrateFieldButton = new JoystickButton(drive, 4);
-        // this is not interruptible unless after a second
-        recalibrateFieldButton.whenPressed(new RecalibrateField().withTimeout(1), false);
+    public Joystick drive = new Joystick(0);
+
+    public boolean isEStop() {
+        return drive.getRawButton(1);
     }
 
     // drivetrain starts
@@ -50,7 +46,16 @@ public class Control {
         return (1 - drive.getRawAxis(3)) / 2;
     }
     
-    public boolean isEStop() {
-        return drive.getRawButton(1);
+    // BallHandler
+    public boolean isShoot() {
+        return drive.getRawButtonPressed(3);
+    }
+
+    public boolean isIntake() {
+        return drive.getRawButtonPressed(4);
+    }
+
+    public boolean isEject() {
+        return drive.getRawButtonPressed(5);
     }
 }

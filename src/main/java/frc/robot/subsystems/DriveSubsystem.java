@@ -17,134 +17,101 @@ import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.VelocityMeasPeriod;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.revrobotics.CANEncoder;
+import com.revrobotics.CANPIDController;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.ControlType;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import frc.robot.Constants;
 
 
 public class DriveSubsystem extends SubsystemBase {
-  public WPI_TalonSRX leftMaster, rightMaster, leftSlave, rightSlave;
-  public PigeonIMU pigeon;
-
+  public CANSparkMax leftMaster, leftSlave1, leftSlave2;
+  public CANSparkMax rightMaster, rightSlave1, rightSlave2;
+  public CANPIDController leftController, rightController;
+  public CANEncoder leftEncoder, rightEncoder;
   public DifferentialDrive drive;
-  public DifferentialDriveOdometry odometry;
-
-  private NetworkTable odom_table = NetworkTableInstance.getDefault().getTable("odom");
-  private NetworkTableEntry encoder_v_entry = odom_table.getEntry("encoder_v");
-  private NetworkTableEntry pose_x = odom_table.getEntry("x");
-  private NetworkTableEntry pose_y = odom_table.getEntry("y");
-  private NetworkTableEntry pose_yaw = odom_table.getEntry("euler_1");
 
   /**
    * Creates a new ExampleSubsystem.
    */
   public DriveSubsystem() {
-    leftSlave = new WPI_TalonSRX(1);
-    leftMaster = new WPI_TalonSRX(3);
-    rightSlave = new WPI_TalonSRX(4);
-    rightMaster = new WPI_TalonSRX(2);
+    leftMaster = new CANSparkMax(12, MotorType.kBrushless);
+    leftSlave1 = new CANSparkMax(13, MotorType.kBrushless);
+    leftSlave2 = new CANSparkMax(14, MotorType.kBrushless);
+    rightMaster = new CANSparkMax(11, MotorType.kBrushless);
+    rightSlave1 = new CANSparkMax(15, MotorType.kBrushless);
+    rightSlave2 = new CANSparkMax(16, MotorType.kBrushless);
 
-    setTalon(leftSlave);
-    setTalon(leftMaster);
-    setTalon(rightSlave);
-    setTalon(rightMaster);
+    setSpark(leftMaster);
+    setSpark(leftSlave1);
+    setSpark(leftSlave2);
+    setSpark(rightMaster);
+    setSpark(rightSlave1);
+    setSpark(rightSlave2);
 
+    leftSlave1.follow(leftMaster);
+    leftSlave2.follow(leftMaster);
+    rightSlave1.follow(rightMaster);
+    rightSlave2.follow(rightMaster);
     rightMaster.setInverted(true);
-    rightSlave.setInverted(true);
 
-    leftSlave.follow(leftMaster);
-    rightSlave.follow(rightMaster);
-
-    leftMaster.setSensorPhase(true);
-    rightMaster.setSensorPhase(true);
+    leftController = leftMaster.getPIDController();
+    rightController = rightMaster.getPIDController();
+    leftEncoder = leftMaster.getEncoder();
+    rightEncoder = rightMaster.getEncoder();
 
     drive = new DifferentialDrive(leftMaster, rightMaster);
     drive.setRightSideInverted(false);
-
-    pigeon = new PigeonIMU(rightSlave);
-
-    odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(pigeon.getFusedHeading()));
   }
 
   @Override
   public void periodic() {
-    double left_mps = leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-    double right_mps = rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-
-    if (Constants.SEND_ENCODER_V)
-      encoder_v_entry.setDouble((left_mps + right_mps) / 2);
-
-    SmartDashboard.putNumber("leftPosition_m", 
-        leftMaster.getSelectedSensorPosition() / Constants.kEncoderUnitPerMeter);
-    SmartDashboard.putNumber("rightPosition_m",
-        rightMaster.getSelectedSensorPosition() / Constants.kEncoderUnitPerMeter);
-    SmartDashboard.putNumber("leftVelocity_mps", left_mps);
-    SmartDashboard.putNumber("rightVelocity_mps", right_mps);
-
-    SmartDashboard.putNumber("pigeon_angle", pigeon.getFusedHeading());
-
-    odometry.update(
-        Rotation2d.fromDegrees(pigeon.getFusedHeading()),
-        leftMaster.getSelectedSensorPosition() / Constants.kEncoderUnitPerMeter,
-        rightMaster.getSelectedSensorPosition() / Constants.kEncoderUnitPerMeter
-    );
-
-    var pose = odometry.getPoseMeters();
-    SmartDashboard.putNumber("pose_x", pose.getTranslation().getX());
-    SmartDashboard.putNumber("pose_y", pose.getTranslation().getY());
-    SmartDashboard.putNumber("pose_theta", pose.getRotation().getDegrees());
+    SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNIT2METER);
+    SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNIT2MPS);
+    SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.ENCODER_UNIT2METER);
+    SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.ENCODER_UNIT2MPS);
   }
 
-  private void setTalon(WPI_TalonSRX talon) {
-    talon.configFactoryDefault();
-
-    talon.configVelocityMeasurementPeriod(VelocityMeasPeriod.Period_10Ms);
-    talon.configVelocityMeasurementWindow(8);
-
-    talon.config_kP(Constants.DRIVETRAIN_VELOCITY_SLOT, Constants.DRIVETRAIN_VELOCITY_GAINS.kP);
-    talon.config_kI(Constants.DRIVETRAIN_VELOCITY_SLOT, Constants.DRIVETRAIN_VELOCITY_GAINS.kI);
-    talon.config_kD(Constants.DRIVETRAIN_VELOCITY_SLOT, Constants.DRIVETRAIN_VELOCITY_GAINS.kD);
-    talon.config_kF(Constants.DRIVETRAIN_VELOCITY_SLOT, Constants.DRIVETRAIN_VELOCITY_GAINS.kF);
-    talon.config_IntegralZone(Constants.DRIVETRAIN_VELOCITY_SLOT, Constants.DRIVETRAIN_VELOCITY_GAINS.kIzone);
-    talon.configClosedLoopPeakOutput(Constants.DRIVETRAIN_VELOCITY_SLOT,
-        Constants.DRIVETRAIN_VELOCITY_GAINS.kPeakOutput);
-    talon.selectProfileSlot(Constants.DRIVETRAIN_VELOCITY_SLOT, 0);
-    talon.configAllowableClosedloopError(Constants.DRIVETRAIN_VELOCITY_SLOT, 0);
-
-    // TODO ramping and current control
+  private void setSpark(CANSparkMax spark) {
+    spark.restoreFactoryDefaults();
   }
 
-  public void resetPose(Pose2d pose) {
-    leftMaster.setSelectedSensorPosition(0);
-    rightMaster.setSelectedSensorPosition(0);
-    odometry.resetPosition(pose, Rotation2d.fromDegrees(pigeon.getFusedHeading()));
+  private void setPID(CANPIDController controller){
+    controller.setP(Constants.SHOOTER_V_GAINS.kP);
+    controller.setI(0);
+    controller.setFF(Constants.SHOOTER_V_GAINS.kF);
+    controller.setD(Constants.SHOOTER_V_GAINS.kD);
+    controller.setOutputRange(-1, 1);
   }
 
   // methods below required for Ramsete Command
 
-  public Pose2d getPose() {
-    return odometry.getPoseMeters();
-  }
+  // public Pose2d getPose() {
+  //   return odometry.getPoseMeters();
+  // }
 
-  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-    return new DifferentialDriveWheelSpeeds(
-        leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter,
-        rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter
-    );
-  }
+  // public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+  //   return new DifferentialDriveWheelSpeeds(
+  //       leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter,
+  //       rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter
+  //   );
+  // }
 
-  public void outputMetersPerSecond(double leftMPS, double rightMPS) {
-    // double leftSpeed = leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-    // double rightSpeed = rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-    // System.out.printf("L set %1.3f actual %1.3f err %1.3f || R set %1.3f actual %1.3f err %1.3f\n", leftMPS, leftSpeed,
-    //     leftMPS - leftSpeed, rightMPS, rightSpeed, rightMPS - rightSpeed);
-    // set value position diff / 100ms (see set documentation)
-    leftMaster.set(
-        ControlMode.Velocity, leftMPS * Constants.kEncoderUnitPerMeter / 10, 
-        DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS
-    );
-    rightMaster.set(
-        ControlMode.Velocity, rightMPS * Constants.kEncoderUnitPerMeter / 10,
-        DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(rightMPS) + Constants.kv * rightMPS
-    );
-  }
+  // public void outputMetersPerSecond(double leftMPS, double rightMPS) {
+  //   // double leftSpeed = leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
+  //   // double rightSpeed = rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
+  //   // System.out.printf("L set %1.3f actual %1.3f err %1.3f || R set %1.3f actual %1.3f err %1.3f\n", leftMPS, leftSpeed,
+  //   //     leftMPS - leftSpeed, rightMPS, rightSpeed, rightMPS - rightSpeed);
+  //   // set value position diff / 100ms (see set documentation)
+  //   leftMaster.set(
+  //       ControlMode.Velocity, leftMPS * Constants.kEncoderUnitPerMeter / 10, 
+  //       DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS
+  //   );
+  //   rightMaster.set(
+  //       ControlMode.Velocity, rightMPS * Constants.kEncoderUnitPerMeter / 10,
+  //       DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(rightMPS) + Constants.kv * rightMPS
+  //   );
+  // }
 }

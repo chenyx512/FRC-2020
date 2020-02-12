@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
 public class Coprocessor extends SubsystemBase {
-  NetworkTable odomTable = NetworkTableInstance.getDefault().getTable("odom");
+  public NetworkTable odomTable = NetworkTableInstance.getDefault().getTable("odom");
 
   // flags coresponding to connection of Nano, tracking camera, RGB camera
   public boolean isConnected, isPoseGood, isTargetGood;

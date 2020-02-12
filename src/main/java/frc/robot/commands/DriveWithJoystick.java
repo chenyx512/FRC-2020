@@ -9,8 +9,6 @@ import frc.robot.Robot;
 
 
 public class DriveWithJoystick extends CommandBase {
-  private final Control control = Control.getInstance();
-
   public DriveWithJoystick() {
     addRequirements(Robot.driveSubsystem);
   }
@@ -24,10 +22,10 @@ public class DriveWithJoystick extends CommandBase {
   public void execute() {
     // TODO may be better to use closed loop, may be better to square input
     Robot.driveSubsystem.drive.curvatureDrive(
-      control.getForwardThrottle(),
-      control.getRotationThrottle() * 
-          (control.isQuickTurn()? 1:Math.signum(control.getForwardThrottle())), 
-      control.isQuickTurn()
+      Control.getInstance().getForwardThrottle() * 0.5,
+      Control.getInstance().getRotationThrottle() * 
+          (Control.getInstance().isQuickTurn()? 1:Math.signum(Control.getInstance().getForwardThrottle())), 
+      Control.getInstance().isQuickTurn()
     );
   }
 
