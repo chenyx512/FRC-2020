@@ -8,7 +8,7 @@ public class Constants {
 
   // encoder
   public static final double ENCODER_UNIT2METER = 11.0 / 50 * 24 / 50 * 6.25 * 0.0254;
-  public static final double ENCODER_UNIT2MPS = ENCODER_UNIT2METER / 60;
+  public static final double RPM2MPS = ENCODER_UNIT2METER / 60;
 
   // drivetrain physical characteristic
   public static final double kPDriveVel = 3.65;
@@ -17,13 +17,13 @@ public class Constants {
   public static final double kMaxSpeedMetersPerSecond = 1;
   public static final double kMaxAccelerationMetersPerSecondSquared = 1;
 
-  // drivetrain control feedfroward, div by 12 from characterization data which is in volts
-  public static final double ks = 0.669 / 12;
-  public static final double kv = 3.15 / 12;
-  public static final double ka = 0.3912 / 12;
+  // drivetrain control feedfroward in volts
+  public static final double ks = 0.669;
+  public static final double kv = 3.15;
+  public static final double ka = 0.3912;
 
   // drivetrain talons
-  public static final Gains DRIVETRAIN_VELOCITY_GAINS = new Gains(4, 0, 10, 0, 20, 1);
+  public static final Gains DRIVETRAIN_VELOCITY_GAINS = new Gains(0.001, 0, 0, 0, 20, 1);
   public static final int DRIVETRAIN_VELOCITY_SLOT = 0;
   
   // shooter sparks

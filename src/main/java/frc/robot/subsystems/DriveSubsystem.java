@@ -12,11 +12,6 @@ import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.DemandType;
-import com.ctre.phoenix.motorcontrol.VelocityMeasPeriod;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
@@ -69,9 +64,9 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNIT2METER);
-    SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNIT2MPS);
-    SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.ENCODER_UNIT2METER);
-    SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.ENCODER_UNIT2MPS);
+    SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNIT2METER);
+    SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPM2MPS);
+    SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPM2MPS);
   }
 
   private void setSpark(CANSparkMax spark) {
@@ -92,26 +87,28 @@ public class DriveSubsystem extends SubsystemBase {
   //   return odometry.getPoseMeters();
   // }
 
-  // public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-  //   return new DifferentialDriveWheelSpeeds(
-  //       leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter,
-  //       rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter
-  //   );
-  // }
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    return new DifferentialDriveWheelSpeeds(
+        leftEncoder.getVelocity() / Constants.RPM2MPS,
+        rightEncoder.getVelocity() / Constants.RPM2MPS
+    );
+  }
 
-  // public void outputMetersPerSecond(double leftMPS, double rightMPS) {
-  //   // double leftSpeed = leftMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-  //   // double rightSpeed = rightMaster.getSelectedSensorVelocity() / Constants.kEncoderUnitPerMeter * 10;
-  //   // System.out.printf("L set %1.3f actual %1.3f err %1.3f || R set %1.3f actual %1.3f err %1.3f\n", leftMPS, leftSpeed,
-  //   //     leftMPS - leftSpeed, rightMPS, rightSpeed, rightMPS - rightSpeed);
-  //   // set value position diff / 100ms (see set documentation)
-  //   leftMaster.set(
-  //       ControlMode.Velocity, leftMPS * Constants.kEncoderUnitPerMeter / 10, 
-  //       DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS
-  //   );
-  //   rightMaster.set(
-  //       ControlMode.Velocity, rightMPS * Constants.kEncoderUnitPerMeter / 10,
-  //       DemandType.ArbitraryFeedForward, Constants.ks * Math.signum(rightMPS) + Constants.kv * rightMPS
-  //   );
-  // }
+  public void outputMetersPerSecond(double leftMPS, double rightMPS) {
+    // double LDesired = leftMPS * Constants.RPM2MPS;
+    // double LActual = leftEncoder.getVelocity();
+    // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", LDesired, LActual, LDesired - LActual);
+    leftController.setReference(
+      leftMPS * Constants.RPM2MPS,
+      ControlType.kVelocity, 
+      0, 
+      Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS
+    );
+    rightController.setReference(
+      rightMPS * Constants.RPM2MPS,
+      ControlType.kVelocity, 
+      0, 
+      Constants.ks * Math.signum(rightMPS) + Constants.kv * rightMPS
+    );
+  }
 }

@@ -21,8 +21,12 @@ public class DriveWithJoystick extends CommandBase {
   @Override
   public void execute() {
     // TODO may be better to use closed loop, may be better to square input
+    // double speed = Control.getInstance().getSlider() * 2.0;
+    // Robot.driveSubsystem.outputMetersPerSecond(speed, speed);
+    double speed = Control.getInstance().getForwardThrottle();
+    speed = speed * speed * Math.signum(speed);
     Robot.driveSubsystem.drive.curvatureDrive(
-      Control.getInstance().getForwardThrottle() * 0.5,
+      speed,
       Control.getInstance().getRotationThrottle() * 
           (Control.getInstance().isQuickTurn()? 1:Math.signum(Control.getInstance().getForwardThrottle())), 
       Control.getInstance().isQuickTurn()
