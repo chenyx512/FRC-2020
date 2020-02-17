@@ -1,29 +1,31 @@
 package frc.robot;
 
-
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.geometry.*;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-
-import frc.robot.commands.DriveWithJoystick;
-import frc.robot.subsystems.BallHandler;
-import frc.robot.subsystems.Coprocessor;
-import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.BallHandler.BallHandlerState;
+import frc.robot.commands.*;
+import frc.robot.subsystems.*;
 
 
 public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
-  public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
   public static BallHandler ballHandler = new BallHandler();
   public static Coprocessor coprocessor = new Coprocessor();
+  public static Climber climber = null; // new Climber();
+  public static PanelTurner panelTurner = null; // new PanelTurner();
+  
   private static Control control = Control.getInstance();
+  private static AutoShoot autoShoot = new AutoShoot();
+  private static AutoIntake autoIntake = new AutoIntake();
+  private static Eject eject = new Eject();
+  private static PanelTurnPositionControl positionControl = new PanelTurnPositionControl();
 
   @Override
   public void robotInit() {
-    driveSubsystem.setDefaultCommand(driveWithJoystick);
+    driveSubsystem.setDefaultCommand(new DriveWithJoystick());
+    ballHandler.setDefaultCommand(new HandleBallWithJoystick());
+    // climber.setDefaultCommand(new ClimbWithJoystick());
+    // panelTurner.setDefaultCommand(new TurnPanelWithJoystick());
   }
 
   /* RobotPeriodic is called after the coresponding periodic of the stage,
@@ -40,15 +42,25 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     if(Control.getInstance().isEStop()){
       CommandScheduler.getInstance().cancelAll();
-      ballHandler.state = BallHandlerState.IDLE;
       return;
     }
-    // BallHandler
-    if (control.isIntake())
-      ballHandler.state = BallHandlerState.INTAKE;
-    else if (control.isShoot())
-      ballHandler.state = BallHandlerState.SHOOT;
+
+    if (control.isCalibrateField())
+      coprocessor.calibrate_field();
+
+    // ballHandler
+    if (control.isResetBallCnt())
+      ballHandler.ballCnt = 0;
+    
+    if (control.isAutoShoot() || control.isOverrideShoot())
+      autoShoot.schedule();
+    else if(control.isAutoIntake() || control.isOverrideIntake())
+      autoIntake.schedule();
     else if(control.isEject())
-      ballHandler.state = BallHandlerState.EJECT;
+      eject.schedule();
+
+    
+    // PanelTurner
+    
   }
 }

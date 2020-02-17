@@ -16,7 +16,6 @@ public class Constants {
   public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
   public static final double kMaxSpeedMetersPerSecond = 1;
   public static final double kMaxAccelerationMetersPerSecondSquared = 1;
-
   // drivetrain control feedfroward in volts
   public static final double ks = 0.669;
   public static final double kv = 3.15;
@@ -32,6 +31,11 @@ public class Constants {
   // Ramsete
   public static final double kRamseteB = 2;
   public static final double kRamseteZeta = 0.7;
+
+  // AutoShoot
+  public static final double MAX_SHOOT_ANGLE_ERROR = 1;
+  public static final double AUTO_SHOOT_HOLD_TIME = 0.3;
+  public static final double MAX_SHOOT_RPM_ERROR = 100;
 
   public static class Gains {
     public final double kP;

@@ -3,7 +3,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj2.command.button.Button;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.RecalibrateField;
 
 
 /**
@@ -25,11 +24,20 @@ public class Control {
 
     public Joystick drive = new Joystick(0);
 
+    // general controls
     public boolean isEStop() {
-        return drive.getRawButton(1);
+        return drive.getRawButtonPressed(1);
     }
 
-    // drivetrain starts
+    private boolean isOverride() {
+        return drive.getRawButton(12);
+    }
+
+    public boolean isCalibrateField() {
+        return drive.getRawButtonPressed(11);
+    }
+
+    // drivetrain
     public boolean isQuickTurn() {
         return drive.getRawButton(2);
     }
@@ -45,17 +53,46 @@ public class Control {
     public double getSlider() {
         return (1 - drive.getRawAxis(3)) / 2;
     }
-    
+
     // BallHandler
-    public boolean isShoot() {
-        return drive.getRawButtonPressed(3);
+    private static final int SHOOT_BUTTON = 3;
+    private static final int INTAKE_BUTTON = 4;
+    private static final int EJECT_BUTTON = 5;
+    public boolean isAutoShoot() {
+        return drive.getRawButtonPressed(SHOOT_BUTTON) && !isOverride();
     }
-
-    public boolean isIntake() {
-        return drive.getRawButtonPressed(4);
+    public boolean isOverrideShoot() {
+        return drive.getRawButton(SHOOT_BUTTON) && isOverride();
     }
-
+    public boolean isAutoIntake() {
+        return drive.getRawButtonPressed(INTAKE_BUTTON) && !isOverride();
+    }
+    public boolean isOverrideIntake() {
+        return drive.getRawButton(INTAKE_BUTTON) && isOverride();
+    }
     public boolean isEject() {
-        return drive.getRawButtonPressed(5);
+        return drive.getRawButton(EJECT_BUTTON) && !isOverride();
+    }
+    public boolean isResetBallCnt() {
+        return drive.getRawButton(EJECT_BUTTON) && isOverride();
+    }
+
+    // PanelTurner
+    public double getWheelSpeed() {
+        return 0;
+    }
+    public double getActuatorSpeed() {
+        return 0;
+    }
+    public boolean isPositionControl() {
+        return false;
+    }
+
+    // Climber
+    public double getWinchSpeed() {
+        return 0;
+    }
+    public double getHookSpeed() {
+        return 0;
     }
 }

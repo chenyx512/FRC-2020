@@ -14,10 +14,10 @@ public class Coprocessor extends SubsystemBase {
 
   // flags coresponding to connection of Nano, tracking camera, RGB camera
   public boolean isConnected, isPoseGood, isTargetGood;
-  // values for maintaining angle
-  public double targetT265Azm, targetFieldAzm, t265Azm, fieldAzm;
-  public double targetRelativeDirRight;
   public boolean isTargetFound;
+  public double fieldX, fieldY, fieldTheta;
+  public double targetFieldTheta, targetRelativeDirLeft;
+  public double targetDis;
 
   private double lastClientTime;
   private int disconnectCnt;
@@ -30,12 +30,12 @@ public class Coprocessor extends SubsystemBase {
     checkConnection();
     
     isTargetFound = odomTable.getEntry("target_found").getBoolean(false);
-    targetT265Azm = odomTable.getEntry("target_t265_azm").getDouble(0);
-    t265Azm = odomTable.getEntry("t265_pose_t").getDouble(0);
-    targetFieldAzm = odomTable.getEntry("target_field_azm").getDouble(0);
-    fieldAzm = odomTable.getEntry("field_pose_t").getDouble(0);
-
-    targetRelativeDirRight = odomTable.getEntry("target_relative_dir_right").getDouble(0);
+    fieldX = odomTable.getEntry("field_x").getDouble(0);
+    fieldY = odomTable.getEntry("field_y").getDouble(0);
+    fieldTheta = odomTable.getEntry("field_t").getDouble(0);
+    targetFieldTheta = odomTable.getEntry("target_field_theta").getDouble(0);
+    targetRelativeDirLeft = odomTable.getEntry("target_relative_dir_left").getDouble(0);
+    targetDis = odomTable.getEntry("target_dis").getDouble(0);
   }
 
   /** This method updates if Nano is working as expected
@@ -44,7 +44,7 @@ public class Coprocessor extends SubsystemBase {
     double clientTime = odomTable.getEntry("client_time").getDouble(0);
     if(clientTime == lastClientTime){
       disconnectCnt++;
-      if(disconnectCnt > 5){
+      if(disconnectCnt > 10){
         isConnected=false;
         odomTable.getEntry("field_calibration_good").setBoolean(false);
       }
@@ -62,5 +62,9 @@ public class Coprocessor extends SubsystemBase {
 
   public boolean isFieldCalibrated() {
     return odomTable.getEntry("field_calibration_good").getBoolean(false);
+  }
+
+  public void calibrate_field() {
+    odomTable.getEntry("field_calibration_start").setBoolean(true);
   }
 }

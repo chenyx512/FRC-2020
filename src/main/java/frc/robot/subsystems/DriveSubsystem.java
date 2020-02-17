@@ -28,9 +28,6 @@ public class DriveSubsystem extends SubsystemBase {
   public CANEncoder leftEncoder, rightEncoder;
   public DifferentialDrive drive;
 
-  /**
-   * Creates a new ExampleSubsystem.
-   */
   public DriveSubsystem() {
     leftMaster = new CANSparkMax(12, MotorType.kBrushless);
     leftSlave1 = new CANSparkMax(13, MotorType.kBrushless);
