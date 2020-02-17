@@ -41,7 +41,7 @@ public class AutoShoot extends CommandBase {
   @Override
   public void execute() {
     targetAngle = Robot.coprocessor.targetFieldTheta;
-    currentAngle = Robot.coprocessor.robotTheta;
+    currentAngle = Robot.coprocessor.fieldTheta;
     error = ((targetAngle - currentAngle)%360+360)%360;
     if(error>180)
       error -= 360;
