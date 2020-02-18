@@ -24,6 +24,6 @@ public class AutoIntake extends CommandBase {
 
   @Override
   public boolean isFinished() {
-    return Robot.ballHandler.ballCnt < 5 && !control.isOverrideIntake();
+    return Robot.ballHandler.ballCnt >= 5 && !control.isOverrideIntake();
   }
 }

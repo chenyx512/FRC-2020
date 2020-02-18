@@ -2,13 +2,7 @@ package frc.robot.subsystems;
 
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.geometry.*;
-import edu.wpi.first.wpilibj.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -53,6 +47,8 @@ public class DriveSubsystem extends SubsystemBase {
     rightController = rightMaster.getPIDController();
     leftEncoder = leftMaster.getEncoder();
     rightEncoder = rightMaster.getEncoder();
+    setPID(leftController);
+    setPID(rightController);
 
     drive = new DifferentialDrive(leftMaster, rightMaster);
     drive.setRightSideInverted(false);

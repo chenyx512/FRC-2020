@@ -6,7 +6,7 @@ public class Constants {
   // coprocessor
   public static final boolean SEND_ENCODER_V = false;
 
-  // encoder
+  // encoder TODO tune physical characteristics
   public static final double ENCODER_UNIT2METER = 11.0 / 50 * 24 / 50 * 6.25 * 0.0254;
   public static final double RPM2MPS = ENCODER_UNIT2METER / 60;
 
@@ -33,9 +33,9 @@ public class Constants {
   public static final double kRamseteZeta = 0.7;
 
   // AutoShoot
-  public static final double MAX_SHOOT_ANGLE_ERROR = 1;
+  public static final double MAX_SHOOT_ANGLE_ERROR = 2;
   public static final double AUTO_SHOOT_HOLD_TIME = 0.3;
-  public static final double MAX_SHOOT_RPM_ERROR = 100;
+  public static final double MAX_SHOOT_RPM_ERROR = 200;
 
   public static class Gains {
     public final double kP;

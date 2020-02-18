@@ -75,6 +75,6 @@ public class AutoShoot extends CommandBase {
   }
 
   private double calculateRPM() {
-    return Control.getInstance().getSlider() * 5700;
-  }
+    return Control.getInstance().getSlider() * 5500;
+  } 
 }

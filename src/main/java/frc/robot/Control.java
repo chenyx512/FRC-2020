@@ -1,8 +1,6 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj2.command.button.Button;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 
 /**
@@ -30,7 +28,7 @@ public class Control {
     }
 
     private boolean isOverride() {
-        return drive.getRawButton(12);
+        return drive.getRawButton(7);
     }
 
     public boolean isCalibrateField() {
@@ -55,9 +53,9 @@ public class Control {
     }
 
     // BallHandler
-    private static final int SHOOT_BUTTON = 3;
-    private static final int INTAKE_BUTTON = 4;
-    private static final int EJECT_BUTTON = 5;
+    private static final int SHOOT_BUTTON = 5;
+    private static final int INTAKE_BUTTON = 3;
+    private static final int EJECT_BUTTON = 6;
     public boolean isAutoShoot() {
         return drive.getRawButtonPressed(SHOOT_BUTTON) && !isOverride();
     }
@@ -77,12 +75,31 @@ public class Control {
         return drive.getRawButton(EJECT_BUTTON) && isOverride();
     }
 
+    // POV: 0 top 45 top right, -1 nothing
     // PanelTurner
     public double getWheelSpeed() {
-        return 0;
+        if (isOverride())
+            return 0;
+        switch (drive.getPOV()) {
+            case 90:
+                return 0.3;
+            case 270:
+                return -0.3;
+            default:
+                return 0;
+        }
     }
     public double getActuatorSpeed() {
-        return 0;
+        if (isOverride())
+            return 0;
+        switch (drive.getPOV()) {
+            case 0:
+                return 0.3;
+            case 180:
+                return -0.3;
+            default:
+                return 0;
+        }
     }
     public boolean isPositionControl() {
         return false;
@@ -90,9 +107,27 @@ public class Control {
 
     // Climber
     public double getWinchSpeed() {
-        return 0;
+        if (!isOverride())
+            return 0;
+        switch (drive.getPOV()) {
+            case 90:
+                return 1;
+            case 270:
+                return -1;
+            default:
+                return 0;
+        }
     }
     public double getHookSpeed() {
-        return 0;
+        if (!isOverride())
+            return 0;
+        switch (drive.getPOV()) {
+            case 0:
+                return 0.3;
+            case 180:
+                return -0.3;
+            default:
+                return 0;
+        }
     }
 }

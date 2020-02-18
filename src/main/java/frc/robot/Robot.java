@@ -11,21 +11,21 @@ public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static BallHandler ballHandler = new BallHandler();
   public static Coprocessor coprocessor = new Coprocessor();
-  public static Climber climber = null; // new Climber();
-  public static PanelTurner panelTurner = null; // new PanelTurner();
+  public static Climber climber = new Climber();
+  public static PanelTurner panelTurner = new PanelTurner();
   
   private static Control control = Control.getInstance();
   private static AutoShoot autoShoot = new AutoShoot();
   private static AutoIntake autoIntake = new AutoIntake();
   private static Eject eject = new Eject();
-  private static PanelTurnPositionControl positionControl = new PanelTurnPositionControl();
+  // private static PanelTurnPositionControl positionControl = new PanelTurnPositionControl();
 
   @Override
   public void robotInit() {
     driveSubsystem.setDefaultCommand(new DriveWithJoystick());
     ballHandler.setDefaultCommand(new HandleBallWithJoystick());
-    // climber.setDefaultCommand(new ClimbWithJoystick());
-    // panelTurner.setDefaultCommand(new TurnPanelWithJoystick());
+    climber.setDefaultCommand(new ClimbWithJoystick());
+    panelTurner.setDefaultCommand(new TurnPanelWithJoystick());
   }
 
   /* RobotPeriodic is called after the coresponding periodic of the stage,
@@ -40,7 +40,9 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+
     if(Control.getInstance().isEStop()){
+      // make sure to use wpilib 2020.2, otherwise there would be a bug
       CommandScheduler.getInstance().cancelAll();
       return;
     }
