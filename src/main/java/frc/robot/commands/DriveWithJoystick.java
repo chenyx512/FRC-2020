@@ -1,43 +1,40 @@
 package frc.robot.commands;
 
 
+import com.team254.lib.util.CheesyDriveHelper;
+
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.Control;
 import frc.robot.Robot;
 
 
 public class DriveWithJoystick extends CommandBase {
+  private CheesyDriveHelper cheesyDrive = new CheesyDriveHelper();
+  private Control control = Control.getInstance();
+
   public DriveWithJoystick() {
     addRequirements(Robot.driveSubsystem);
   }
 
   @Override
-  public void initialize() {
-    Robot.driveSubsystem.drive.setSafetyEnabled(true);
-  }
-
-  @Override
   public void execute() {
-    // TODO may be better to use closed loop, may be better to square input
-    // double speed = Control.getInstance().getSlider() * 2.0;
-    // Robot.driveSubsystem.outputMetersPerSecond(speed, speed);
-    double speed = Control.getInstance().getForwardThrottle();
-    speed = speed * speed * Math.signum(speed);
-    Robot.driveSubsystem.drive.curvatureDrive(
+    if(control.isOverride()){
+      double speed = control.getSlider() * 3;
+      Robot.driveSubsystem.setVelocity(speed, speed);
+      return;
+    }
+    double speed = control.getForwardThrottle();
+    boolean isQuickTurn = control.isQuickTurn();
+    speed = speed * speed * Math.signum(speed) * 0.7;
+    double rotation_sign = (isQuickTurn || speed>0? 1:-1) ;
+    double rotation = control.getRotationThrottle();
+    rotation = rotation * rotation * Math.signum(rotation) * 0.7;
+    Robot.driveSubsystem.setOpenLoop(cheesyDrive.cheesyDrive(
       speed,
-      Control.getInstance().getRotationThrottle() * 
-          (Control.getInstance().isQuickTurn()? 1:Math.signum(Control.getInstance().getForwardThrottle())), 
-      Control.getInstance().isQuickTurn()
-    );
-  }
-
-  @Override
-  public void end(boolean interrupted) {
-    Robot.driveSubsystem.drive.setSafetyEnabled(false);
-  }
-
-  @Override
-  public boolean isFinished() {
-    return false;
+      rotation * rotation_sign, 
+      isQuickTurn, 
+      false
+    ));
+    
   }
 }

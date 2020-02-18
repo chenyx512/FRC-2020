@@ -10,17 +10,26 @@ import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.team254.lib.util.DriveSignal;
 
 import frc.robot.Constants;
 
 
 public class DriveSubsystem extends SubsystemBase {
+  public enum DriveControlState {
+    OPEN_LOOP,
+    VELOCITY_CONTROL,
+    PATH_FOLLOWING,
+  }
+
   public CANSparkMax leftMaster, leftSlave1, leftSlave2;
   public CANSparkMax rightMaster, rightSlave1, rightSlave2;
   public CANPIDController leftController, rightController;
   public CANEncoder leftEncoder, rightEncoder;
-  public DifferentialDrive drive;
+  private boolean isBrakeMode = false;
+  private DriveControlState driveControlState = DriveControlState.OPEN_LOOP;
 
   public DriveSubsystem() {
     leftMaster = new CANSparkMax(12, MotorType.kBrushless);
@@ -36,6 +45,8 @@ public class DriveSubsystem extends SubsystemBase {
     setSpark(rightMaster);
     setSpark(rightSlave1);
     setSpark(rightSlave2);
+    isBrakeMode = !isBrakeMode;
+    setBrakeMode(!isBrakeMode);
 
     leftSlave1.follow(leftMaster);
     leftSlave2.follow(leftMaster);
@@ -47,61 +58,85 @@ public class DriveSubsystem extends SubsystemBase {
     rightController = rightMaster.getPIDController();
     leftEncoder = leftMaster.getEncoder();
     rightEncoder = rightMaster.getEncoder();
+    leftEncoder.setPosition(0);
+    rightEncoder.setPosition(0);
     setPID(leftController);
     setPID(rightController);
-
-    drive = new DifferentialDrive(leftMaster, rightMaster);
-    drive.setRightSideInverted(false);
   }
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNIT2METER);
-    SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNIT2METER);
-    SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPM2MPS);
-    SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPM2MPS);
+    SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
+    SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
+    SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPMpMPS);
+    SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPMpMPS);
   }
 
   private void setSpark(CANSparkMax spark) {
     spark.restoreFactoryDefaults();
+    spark.setOpenLoopRampRate(0.5);
+    spark.setClosedLoopRampRate(0.5);
   }
 
   private void setPID(CANPIDController controller){
-    controller.setP(Constants.SHOOTER_V_GAINS.kP);
+    controller.setP(Constants.DRIVETRAIN_VELOCITY_GAINS.kP);
     controller.setI(0);
-    controller.setFF(Constants.SHOOTER_V_GAINS.kF);
-    controller.setD(Constants.SHOOTER_V_GAINS.kD);
+    controller.setFF(Constants.DRIVETRAIN_VELOCITY_GAINS.kF);
+    controller.setD(Constants.DRIVETRAIN_VELOCITY_GAINS.kD);
     controller.setOutputRange(-1, 1);
   }
 
-  // methods below required for Ramsete Command
-
-  // public Pose2d getPose() {
-  //   return odometry.getPoseMeters();
-  // }
-
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
     return new DifferentialDriveWheelSpeeds(
-        leftEncoder.getVelocity() / Constants.RPM2MPS,
-        rightEncoder.getVelocity() / Constants.RPM2MPS
+        leftEncoder.getVelocity() / Constants.RPMpMPS,
+        rightEncoder.getVelocity() / Constants.RPMpMPS
     );
   }
 
-  public void outputMetersPerSecond(double leftMPS, double rightMPS) {
-    // double LDesired = leftMPS * Constants.RPM2MPS;
-    // double LActual = leftEncoder.getVelocity();
-    // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", LDesired, LActual, LDesired - LActual);
+  public void setVelocity(double leftMPS, double rightMPS) {
+    double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
+    System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
+    
+    if (driveControlState != DriveControlState.VELOCITY_CONTROL) {
+      setBrakeMode(true);
+      driveControlState = DriveControlState.VELOCITY_CONTROL;
+      System.out.println("enter velocity control mode");
+    }
+
     leftController.setReference(
-      leftMPS * Constants.RPM2MPS,
+      leftMPS * Constants.RPMpMPS,
       ControlType.kVelocity, 
       0, 
       Constants.ks * Math.signum(leftMPS) + Constants.kv * leftMPS
     );
     rightController.setReference(
-      rightMPS * Constants.RPM2MPS,
+      rightMPS * Constants.RPMpMPS,
       ControlType.kVelocity, 
       0, 
       Constants.ks * Math.signum(rightMPS) + Constants.kv * rightMPS
     );
+  }
+
+  public void setOpenLoop(DriveSignal driveSignal) {
+    if (driveControlState != DriveControlState.OPEN_LOOP) {
+      setBrakeMode(false);
+      driveControlState = DriveControlState.OPEN_LOOP;
+      System.out.println("enter open loop mode");
+    }
+    leftMaster.set(driveSignal.getLeft());
+    rightMaster.set(driveSignal.getRight());
+  }
+
+  private void setBrakeMode(boolean on) {
+    if (isBrakeMode == on)
+      return;
+    isBrakeMode = on;
+    IdleMode mode = on? IdleMode.kBrake : IdleMode.kCoast;
+    leftMaster.setIdleMode(mode);
+    rightMaster.setIdleMode(mode);
+    rightSlave1.setIdleMode(mode);
+    rightSlave2.setIdleMode(mode);
+    leftSlave1.setIdleMode(mode);
+    leftSlave2.setIdleMode(mode);
   }
 }

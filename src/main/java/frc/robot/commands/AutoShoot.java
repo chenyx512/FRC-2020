@@ -52,7 +52,7 @@ public class AutoShoot extends CommandBase {
     
     double power = P * error;
     power += Math.signum(error) * 0.15;
-    Robot.driveSubsystem.drive.tankDrive(power * -1, power);
+    Robot.driveSubsystem.setVelocity(power * -1, power);
     // TODO use speed
 
     Robot.ballHandler.desiredRPM = calculateRPM();

@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.geometry.Pose2d;
+import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -64,5 +66,9 @@ public class Coprocessor extends SubsystemBase {
 
   public void calibrate_field() {
     odomTable.getEntry("field_calibration_start").setBoolean(true);
+  }
+
+  public Pose2d getPose() {
+    return new Pose2d(fieldX, fieldY, new Rotation2d(Math.toRadians(fieldTheta)));
   }
 }
