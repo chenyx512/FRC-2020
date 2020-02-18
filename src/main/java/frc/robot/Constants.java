@@ -1,0 +1,64 @@
+package frc.robot;
+
+import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
+
+public class Constants {
+  // coprocessor
+  public static final boolean SEND_ENCODER_V = false;
+
+  // encoder TODO tune physical characteristics
+  public static final double ENCODER_UNIT2METER = 11.0 / 50 * 24 / 50 * 6.25 * 0.0254;
+  public static final double RPM2MPS = ENCODER_UNIT2METER / 60;
+
+  // drivetrain physical characteristic
+  public static final double kPDriveVel = 3.65;
+  public static final double kTrackwidthMeters = 0.59182;
+  public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
+  public static final double kMaxSpeedMetersPerSecond = 1;
+  public static final double kMaxAccelerationMetersPerSecondSquared = 1;
+  // drivetrain control feedfroward in volts
+  public static final double ks = 0.669;
+  public static final double kv = 3.15;
+  public static final double ka = 0.3912;
+
+  // drivetrain talons
+  public static final Gains DRIVETRAIN_VELOCITY_GAINS = new Gains(0.001, 0, 0, 0, 20, 1);
+  public static final int DRIVETRAIN_VELOCITY_SLOT = 0;
+  
+  // shooter sparks
+  public static final Gains SHOOTER_V_GAINS = new Gains(2e-4, 0, 0, 1.0 / 5700, 0, 1);
+
+  // Ramsete
+  public static final double kRamseteB = 2;
+  public static final double kRamseteZeta = 0.7;
+
+  // AutoShoot
+  public static final double MAX_SHOOT_ANGLE_ERROR = 2;
+  public static final double AUTO_SHOOT_HOLD_TIME = 0.3;
+  public static final double MAX_SHOOT_RPM_ERROR = 200;
+
+  public static class Gains {
+    public final double kP;
+    public final double kI;
+    public final double kD;
+    public final double kF;
+    public final int kIzone;
+    public final double kPeakOutput;
+
+    public Gains(double _kP, double _kI, double _kD, double _kF, int _kIzone, double _kPeakOutput) {
+      kP = _kP;
+      kI = _kI;
+      kD = _kD;
+      kF = _kF;
+      kIzone = _kIzone;
+      kPeakOutput = _kPeakOutput;
+    }
+  }
+}
+
+/*
+motor 11 to 50
+50 link 24
+24 to 50
+11.0 / 50 * 24 / 50 * 6.25 * 0.0254
+*/
