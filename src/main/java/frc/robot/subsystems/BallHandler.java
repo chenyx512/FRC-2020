@@ -83,10 +83,12 @@ public class BallHandler extends SubsystemBase {
         break;
       
       case PRESPIN:
+        // TODO fix this
         ballIntake.set(0);
         intakeConveyer.set(0);
         shooterConveyer.set(0);
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity);
+        break;
 
       case SHOOT:
         ballIntake.set(0);
@@ -95,7 +97,7 @@ public class BallHandler extends SubsystemBase {
             Math.abs(desiredRPM - encoder.getVelocity()) > Constants.MAX_SHOOT_RPM_ERROR)
           shooterConveyer.set(0);
         else
-          shooterConveyer.set(1);
+          shooterConveyer.set(0.6);
         // TODO think about this
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity);
         break;
@@ -131,8 +133,8 @@ public class BallHandler extends SubsystemBase {
     if (lastShooterBeam == NOBALL && shooterBeamBreaker.get() == BALL &&
         state == BallHandlerState.EJECT)
     ballCnt ++;
-
     lastShooterBeam = shooterBeamBreaker.get();
+    
     if(ballCnt > 5) 
       ballCnt = 5;
     if(ballCnt < 0)

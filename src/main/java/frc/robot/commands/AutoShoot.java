@@ -11,8 +11,9 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 
 public class AutoShoot extends CommandBase {
-  private static final double P = 1.0 / 40.0;
+  private static final double P = 1.0 / 60.0;
   private double targetAngle, currentAngle, error;
+  private boolean startShooting;
   private double shutShooterTime;
   private Control control = Control.getInstance();
 
@@ -42,6 +43,7 @@ public class AutoShoot extends CommandBase {
   public void execute() {
     targetAngle = Robot.coprocessor.targetFieldTheta;
     currentAngle = Robot.coprocessor.fieldTheta;
+    targetAngle -= 2.0;
     error = ((targetAngle - currentAngle)%360+360)%360;
     if(error>180)
       error -= 360;
@@ -51,21 +53,25 @@ public class AutoShoot extends CommandBase {
     SmartDashboard.putNumber("auto_shoot/error", error);
     
     double power = P * error;
-    power += Math.signum(error) * 0.15;
+    if (Math.abs(error) > 0.5)
+      power += Math.signum(error) * 0.1;
     Robot.driveSubsystem.setVelocity(power * -1, power);
     // TODO use speed
 
+    if (Math.abs(error) < Constants.MAX_SHOOT_ANGLE_ERROR || control.isOverrideShoot())
+      startShooting = true;
     Robot.ballHandler.desiredRPM = calculateRPM();
-    Robot.ballHandler.state = (Math.abs(error) < Constants.MAX_SHOOT_ANGLE_ERROR && Robot.coprocessor.isTargetFound) ?
-        BallHandlerState.SHOOT : BallHandlerState.PRESPIN;
+    Robot.ballHandler.state = 
+        startShooting ? BallHandlerState.SHOOT : BallHandlerState.PRESPIN;
     
     // make sure shooter turns for a while for ball to get out
-    if (Robot.ballHandler.ballCnt == 0 && shutShooterTime > 0)
+    if (Robot.ballHandler.ballCnt == 0 && shutShooterTime < 0)
       shutShooterTime = Timer.getFPGATimestamp() + Constants.AUTO_SHOOT_HOLD_TIME;
   }
 
   @Override
   public void end(boolean interrupted) {
+    System.out.println("auto shoot end");
     Robot.ballHandler.state = BallHandlerState.IDLE;
   }
 
@@ -75,6 +81,6 @@ public class AutoShoot extends CommandBase {
   }
 
   private double calculateRPM() {
-    return Control.getInstance().getSlider() * 5500;
+    return Control.getInstance( ).getSlider() * 1000 + 4700;
   } 
 }

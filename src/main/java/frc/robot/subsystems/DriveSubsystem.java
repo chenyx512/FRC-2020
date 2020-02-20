@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.trajectory.Trajectory;
+import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
@@ -15,13 +17,15 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.team254.lib.util.DriveSignal;
 
 import frc.robot.Constants;
+import frc.robot.Robot;
+import frc.robot.util.TrajectoryFollower;
 
 
 public class DriveSubsystem extends SubsystemBase {
   public enum DriveControlState {
     OPEN_LOOP,
     VELOCITY_CONTROL,
-    PATH_FOLLOWING,
+    TRAJECTORY_FOLLOWING,
   }
 
   public CANSparkMax leftMaster, leftSlave1, leftSlave2;
@@ -30,6 +34,7 @@ public class DriveSubsystem extends SubsystemBase {
   public CANEncoder leftEncoder, rightEncoder;
   private boolean isBrakeMode = false;
   private DriveControlState driveControlState = DriveControlState.OPEN_LOOP;
+  TrajectoryFollower trajectoryFollower = new TrajectoryFollower();
 
   public DriveSubsystem() {
     leftMaster = new CANSparkMax(12, MotorType.kBrushless);
@@ -66,24 +71,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    if (driveControlState == DriveControlState.TRAJECTORY_FOLLOWING) {
+      var speed = trajectoryFollower.update(Robot.coprocessor.getPose());
+      setVelocity(speed.leftMetersPerSecond, speed.rightMetersPerSecond);
+    }
     SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
     SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
     SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPMpMPS);
     SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPMpMPS);
-  }
-
-  private void setSpark(CANSparkMax spark) {
-    spark.restoreFactoryDefaults();
-    spark.setOpenLoopRampRate(0.5);
-    spark.setClosedLoopRampRate(0.5);
-  }
-
-  private void setPID(CANPIDController controller){
-    controller.setP(Constants.DRIVETRAIN_VELOCITY_GAINS.kP);
-    controller.setI(0);
-    controller.setFF(Constants.DRIVETRAIN_VELOCITY_GAINS.kF);
-    controller.setD(Constants.DRIVETRAIN_VELOCITY_GAINS.kD);
-    controller.setOutputRange(-1, 1);
   }
 
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
@@ -93,11 +88,25 @@ public class DriveSubsystem extends SubsystemBase {
     );
   }
 
+  public boolean isTrajectoryDone() {
+    return driveControlState == DriveControlState.TRAJECTORY_FOLLOWING &&
+      trajectoryFollower.isDone();
+  }
+
+  public void setTrajectory(Trajectory trajectory) {
+    if (driveControlState != DriveControlState.TRAJECTORY_FOLLOWING) {
+      setBrakeMode(true);
+      driveControlState = DriveControlState.TRAJECTORY_FOLLOWING;
+      System.out.println("enter trajectory following mode");
+    }
+    trajectoryFollower.startTrajectory(trajectory);
+  }
+
   public void setVelocity(double leftMPS, double rightMPS) {
-    double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
-    System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
+    // double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
+    // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
     
-    if (driveControlState != DriveControlState.VELOCITY_CONTROL) {
+    if (driveControlState == DriveControlState.OPEN_LOOP) {
       setBrakeMode(true);
       driveControlState = DriveControlState.VELOCITY_CONTROL;
       System.out.println("enter velocity control mode");
@@ -125,6 +134,20 @@ public class DriveSubsystem extends SubsystemBase {
     }
     leftMaster.set(driveSignal.getLeft());
     rightMaster.set(driveSignal.getRight());
+  }
+
+  private void setSpark(CANSparkMax spark) {
+    spark.restoreFactoryDefaults();
+    spark.setOpenLoopRampRate(0.5);
+    spark.setClosedLoopRampRate(0.5);
+  }
+
+  private void setPID(CANPIDController controller){
+    controller.setP(Constants.DRIVETRAIN_VELOCITY_GAINS.kP);
+    controller.setI(0);
+    controller.setFF(Constants.DRIVETRAIN_VELOCITY_GAINS.kF);
+    controller.setD(Constants.DRIVETRAIN_VELOCITY_GAINS.kD);
+    controller.setOutputRange(-1, 1);
   }
 
   private void setBrakeMode(boolean on) {

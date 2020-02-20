@@ -1,6 +1,9 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.controller.SimpleMotorFeedforward;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.wpilibj.trajectory.TrajectoryConfig;
+import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
 
 public class Constants {
   // coprocessor
@@ -17,12 +20,17 @@ public class Constants {
   // drivetrain physical characteristic
   public static final double kTrackwidthMeters = 0.7112 / 0.93;
   public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
-  public static final double kMaxSpeedMetersPerSecond = 3;
-  public static final double kMaxAccelerationMetersPerSecondSquared = 2.5;
-  // drivetrain control feedfroward in volts
+  public static final double kMaxSpeedMetersPerSecond = 1.5; // 3
+  public static final double kMaxAccelerationMetersPerSecondSquared = 1.05; //
   public static final double ks = 0.101;
   public static final double kv = 2.44;
   public static final double ka = 0.38;
+  public static final DifferentialDriveVoltageConstraint driveVoltageConstraint = 
+      new DifferentialDriveVoltageConstraint(
+        new SimpleMotorFeedforward(ks, kv, ka),
+        kDriveKinematics, 
+        11
+      );
 
   // drivetrain talons
   public static final Gains DRIVETRAIN_VELOCITY_GAINS = new Gains(
@@ -38,8 +46,8 @@ public class Constants {
 
   // AutoShoot
   public static final double MAX_SHOOT_ANGLE_ERROR = 2;
-  public static final double AUTO_SHOOT_HOLD_TIME = 0.3;
-  public static final double MAX_SHOOT_RPM_ERROR = 200;
+  public static final double AUTO_SHOOT_HOLD_TIME = 0.6;
+  public static final double MAX_SHOOT_RPM_ERROR = 100;
 
   public static class Gains {
     public final double kP;

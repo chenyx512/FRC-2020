@@ -18,11 +18,11 @@ public class DriveWithJoystick extends CommandBase {
 
   @Override
   public void execute() {
-    if(control.isOverride()){
-      double speed = control.getSlider() * 3;
-      Robot.driveSubsystem.setVelocity(speed, speed);
-      return;
-    }
+    // if(control.isOverride()){
+    //   double speed = control.getSlider() * 3;
+    //   Robot.driveSubsystem.setVelocity(speed, speed);
+    //   return;
+    // }
     double speed = control.getForwardThrottle();
     boolean isQuickTurn = control.isQuickTurn();
     speed = speed * speed * Math.signum(speed) * 0.7;

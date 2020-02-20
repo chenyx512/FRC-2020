@@ -1,9 +1,14 @@
 package frc.robot;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.commands.*;
+import frc.robot.commands.Auto.ShootPickupOursThreeShoot;
+import frc.robot.commands.Auto.TestAutoCommand;
 import frc.robot.subsystems.*;
 
 
@@ -13,6 +18,8 @@ public class Robot extends TimedRobot {
   public static Coprocessor coprocessor = new Coprocessor();
   public static Climber climber = new Climber();
   public static PanelTurner panelTurner = new PanelTurner();
+
+  public static ExecutorService cocurrentExecutor = Executors.newFixedThreadPool(1);
   
   private static Control control = Control.getInstance();
   private static AutoShoot autoShoot = new AutoShoot();
@@ -31,6 +38,8 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+    Robot.ballHandler.ballCnt = 0;
+    new ShootPickupOursThreeShoot().schedule();
   }
 
   /* RobotPeriodic is called after the coresponding periodic of the stage,
