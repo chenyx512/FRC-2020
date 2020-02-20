@@ -27,7 +27,7 @@ public class Control {
         return drive.getRawButtonPressed(1);
     }
 
-    private boolean isOverride() {
+    public boolean isOverride() {
         return drive.getRawButton(7);
     }
 
