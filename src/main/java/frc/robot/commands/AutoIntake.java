@@ -7,9 +7,15 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 public class AutoIntake extends CommandBase {
   private Control control = Control.getInstance();
+  private int maxBallCnt;
+
+  public AutoIntake(int _maxBallCnt) {
+    addRequirements(Robot.ballHandler);
+    maxBallCnt = _maxBallCnt;
+  }
 
   public AutoIntake() {
-    addRequirements(Robot.ballHandler);
+    this(5);
   }
 
   @Override

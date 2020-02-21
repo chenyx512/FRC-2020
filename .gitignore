@@ -158,4 +158,5 @@ bin/
 imgui.ini
 
 
-# End of https://www.gitignore.io/api/c++,java,linux,macos,gradle,windows,visualstudiocode
+# pycharm
+.idea

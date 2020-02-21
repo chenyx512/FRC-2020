@@ -29,7 +29,7 @@ public class TrajectoryGoTo extends CommandBase {
 
   private TrajectoryGoTo(boolean reversed) {
     addRequirements(Robot.driveSubsystem);
-    trajectoryConfig = new TrajectoryConfig(Constants.kMaxSpeedMetersPerSecond,
+    trajectoryConfig = new TrajectoryConfig(Constants.kMaxSpeedMetersPerSecond, 
         Constants.kMaxAccelerationMetersPerSecondSquared);
     trajectoryConfig.setKinematics(Constants.kDriveKinematics);
     trajectoryConfig.addConstraint(Constants.driveVoltageConstraint);
@@ -53,7 +53,6 @@ public class TrajectoryGoTo extends CommandBase {
     trajectoryConfig.setStartVelocity((wheelSpeed.leftMetersPerSecond + wheelSpeed.rightMetersPerSecond) / 2);
 
     Pose2d startPose = Robot.coprocessor.getPose();
-    System.out.println(startPose.toString());
     if (waypoints != null)
       waypoints.add(0, startPose);
 
@@ -72,15 +71,16 @@ public class TrajectoryGoTo extends CommandBase {
 
   @Override
   public void execute() {
-    if (trajectory == null && !trajectoryFuture.isDone())
-      return;
+    if (trajectory == null && !trajectoryFuture.isDone()) {
+      Robot.driveSubsystem.setVelocity(0.0, 0.0);
+    }
     if (trajectory == null) {
       try {
         trajectory = trajectoryFuture.get();
       } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
       }
-      System.out.printf("starting trajectory after %4.2f sec of calculation", 
+      System.out.printf("starting trajectory after %4.2f sec of calculation\n", 
           Timer.getFPGATimestamp()-calculationStartTime);
       Robot.driveSubsystem.setTrajectory(trajectory);
     }

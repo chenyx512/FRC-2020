@@ -1,5 +1,7 @@
 package com.team254.lib.util;
 
+import edu.wpi.first.wpilibj.Timer;
+
 /**
  * This boolean enforces a minimum time for the value to be true.  It captures a rising edge and enforces
  * based on timestamp.
@@ -15,7 +17,8 @@ public class MinTimeBoolean {
         mRisingEdgeTime = Double.NaN;
     }
 
-    public boolean update(boolean value, double timestamp) {
+    public boolean update(boolean value) {
+        double timestamp = Timer.getFPGATimestamp();
         if (mLatchedBoolean.update(value)) {
             mRisingEdgeTime = timestamp;
         }
@@ -25,5 +28,9 @@ public class MinTimeBoolean {
             return true;
         }
         return value;
+    }
+
+    public boolean get() {
+        return update(false);
     }
 }

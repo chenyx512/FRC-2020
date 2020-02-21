@@ -1,12 +1,15 @@
 package frc.robot.subsystems;
 
-
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.trajectory.constraint.DifferentialDriveVoltageConstraint;
+
+import java.util.ArrayList;
 
 import com.revrobotics.CANEncoder;
 import com.revrobotics.CANPIDController;
@@ -22,6 +25,7 @@ import frc.robot.util.TrajectoryFollower;
 
 
 public class DriveSubsystem extends SubsystemBase {
+  // TODO think about state transition
   public enum DriveControlState {
     OPEN_LOOP,
     VELOCITY_CONTROL,
@@ -72,13 +76,18 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (driveControlState == DriveControlState.TRAJECTORY_FOLLOWING) {
-      var speed = trajectoryFollower.update(Robot.coprocessor.getPose());
+      final var speed = trajectoryFollower.update(Robot.coprocessor.getPose());
       setVelocity(speed.leftMetersPerSecond, speed.rightMetersPerSecond);
     }
     SmartDashboard.putNumber("left_position", leftEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
     SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
     SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPMpMPS);
     SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPMpMPS);
+    if (Constants.SEND_ENCODER_V)
+      NetworkTableInstance.getDefault().getEntry("/odom/encoder_v").setDouble(
+        rightEncoder.getVelocity() / Constants.RPMpMPS / 2 +
+        leftEncoder.getVelocity()/ Constants.RPMpMPS / 2
+      );
   }
 
   public DifferentialDriveWheelSpeeds getWheelSpeeds() {
@@ -93,16 +102,31 @@ public class DriveSubsystem extends SubsystemBase {
       trajectoryFollower.isDone();
   }
 
-  public void setTrajectory(Trajectory trajectory) {
+  public void setTrajectory(final Trajectory trajectory) {
     if (driveControlState != DriveControlState.TRAJECTORY_FOLLOWING) {
+      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
+          setString(driveControlState.toString());
       setBrakeMode(true);
       driveControlState = DriveControlState.TRAJECTORY_FOLLOWING;
       System.out.println("enter trajectory following mode");
     }
+    final var states = trajectory.getStates();
+    final double totalTime = trajectory.getTotalTimeSeconds();
+    System.out.printf("start trajectory with time %.2f sec and %d states\n",
+        totalTime, states.size());
+    final double[] stateList = new double[200];
+    for(int i=0;i<100;i++) {
+      final int stateStep = states.size() * i / 100;
+      final var coord = states.get(stateStep).poseMeters.getTranslation();
+      stateList[i * 2] = coord.getX();
+      stateList[i * 2 + 1] = coord.getY();
+    }
+    NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/trajectory").
+        setDoubleArray(stateList);
     trajectoryFollower.startTrajectory(trajectory);
   }
 
-  public void setVelocity(double leftMPS, double rightMPS) {
+  public void setVelocity(final double leftMPS, final double rightMPS) {
     // double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
     // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
     
@@ -110,6 +134,8 @@ public class DriveSubsystem extends SubsystemBase {
       setBrakeMode(true);
       driveControlState = DriveControlState.VELOCITY_CONTROL;
       System.out.println("enter velocity control mode");
+      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
+          setString(driveControlState.toString());
     }
 
     leftController.setReference(
@@ -126,8 +152,10 @@ public class DriveSubsystem extends SubsystemBase {
     );
   }
 
-  public void setOpenLoop(DriveSignal driveSignal) {
+  public void setOpenLoop(final DriveSignal driveSignal) {
     if (driveControlState != DriveControlState.OPEN_LOOP) {
+      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
+          setString(driveControlState.toString());
       setBrakeMode(false);
       driveControlState = DriveControlState.OPEN_LOOP;
       System.out.println("enter open loop mode");
@@ -136,13 +164,13 @@ public class DriveSubsystem extends SubsystemBase {
     rightMaster.set(driveSignal.getRight());
   }
 
-  private void setSpark(CANSparkMax spark) {
+  private void setSpark(final CANSparkMax spark) {
     spark.restoreFactoryDefaults();
     spark.setOpenLoopRampRate(0.5);
     spark.setClosedLoopRampRate(0.5);
   }
 
-  private void setPID(CANPIDController controller){
+  private void setPID(final CANPIDController controller){
     controller.setP(Constants.DRIVETRAIN_VELOCITY_GAINS.kP);
     controller.setI(0);
     controller.setFF(Constants.DRIVETRAIN_VELOCITY_GAINS.kF);
@@ -150,11 +178,11 @@ public class DriveSubsystem extends SubsystemBase {
     controller.setOutputRange(-1, 1);
   }
 
-  private void setBrakeMode(boolean on) {
+  private void setBrakeMode(final boolean on) {
     if (isBrakeMode == on)
       return;
     isBrakeMode = on;
-    IdleMode mode = on? IdleMode.kBrake : IdleMode.kCoast;
+    final IdleMode mode = on? IdleMode.kBrake : IdleMode.kCoast;
     leftMaster.setIdleMode(mode);
     rightMaster.setIdleMode(mode);
     rightSlave1.setIdleMode(mode);

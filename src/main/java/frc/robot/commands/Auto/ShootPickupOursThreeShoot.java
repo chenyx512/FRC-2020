@@ -15,8 +15,9 @@ public class ShootPickupOursThreeShoot extends SequentialCommandGroup {
         List.of(CriticalPoints.ourTrenchRunEntry, CriticalPoints.ourTrenchRunThreeBallStop), 
         false
       ),
-      new AutoIntake()
+      new AutoIntake(3)
     ));
+    addCommands(new TrajectoryGoTo(List.of(CriticalPoints.shootPoint), true));
     addCommands(new AutoShoot());
   }
 }

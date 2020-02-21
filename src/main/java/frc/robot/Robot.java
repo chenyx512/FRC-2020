@@ -38,7 +38,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    Robot.ballHandler.ballCnt = 0;
+    Robot.ballHandler.ballCnt = 3;
     new ShootPickupOursThreeShoot().schedule();
   }
 
