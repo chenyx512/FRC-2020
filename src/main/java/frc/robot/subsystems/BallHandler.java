@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Control;
 
 
 public class BallHandler extends SubsystemBase {
@@ -85,7 +86,7 @@ public class BallHandler extends SubsystemBase {
         ballIntake.set(0);
         intakeConveyer.set(0);
         shooterConveyer.set(0);
-        shooterPIDController.setReference(0, ControlType.kVelocity);
+        shooterMaster.set(0);
         isFreeSpinning.update(false);
         break;
       
@@ -119,7 +120,7 @@ public class BallHandler extends SubsystemBase {
         ballIntake.set(0);
         // run intake conveyer to make sure the last ball gets shot
         // but not when there are too many balls to prevent jamming
-        intakeConveyer.set(ballCnt <= 3 ? 1 : 0);
+        intakeConveyer.set(ballCnt <= 2 || Control.getInstance().isOverride()? 1 : 0);
         shooterConveyer.set(shootingState == ShootingState.SHOOT || 
                             shooterBeamBreaker.get() == NO_BALL? 1 : 0);
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity,
@@ -131,7 +132,7 @@ public class BallHandler extends SubsystemBase {
         ballIntake.set(1);
         intakeConveyer.set(1);
         shooterConveyer.set(shooterBeamBreaker.get() == BALL? 0 : 0.7);
-        shooterPIDController.setReference(0, ControlType.kVelocity);
+        shooterMaster.set(0);
         isFreeSpinning.update(false);
         break;
       

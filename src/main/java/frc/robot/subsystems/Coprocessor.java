@@ -1,8 +1,11 @@
 package frc.robot.subsystems;
 
 
+import com.team254.lib.util.MinTimeBoolean;
+
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.geometry.Pose2d;
 import edu.wpi.first.wpilibj.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -16,7 +19,11 @@ public class Coprocessor extends SubsystemBase {
   public boolean isConnected, isPoseGood, isTargetGood;
   public boolean isTargetFound;
   public double fieldX, fieldY, fieldTheta;
+  public double robotTheta;
   public double targetFieldTheta, targetRelativeDirLeft;
+  public boolean isBallFound = false;
+  private double lastBallTime = 0;
+  public double ballDis, ballAngle;
   public double targetDis;
 
   private double lastClientTime;
@@ -33,9 +40,28 @@ public class Coprocessor extends SubsystemBase {
     fieldX = odomTable.getEntry("field_x").getDouble(0);
     fieldY = odomTable.getEntry("field_y").getDouble(0);
     fieldTheta = odomTable.getEntry("field_t").getDouble(0);
+    robotTheta = odomTable.getEntry("robot_t").getDouble(0);
     targetFieldTheta = odomTable.getEntry("target_field_theta").getDouble(0);
     targetRelativeDirLeft = odomTable.getEntry("target_relative_dir_left").getDouble(0);
     targetDis = odomTable.getEntry("target_dis").getDouble(0);
+
+    var balls = odomTable.getEntry("ball").getDoubleArray(new double [0]);
+    boolean thisBallFound = balls.length > 0 && balls.length % 2 == 0;
+    if (thisBallFound) {
+      lastBallTime = Timer.getFPGATimestamp();
+      isBallFound = true;
+    } else if (Timer.getFPGATimestamp() - lastBallTime > 0.2)
+      isBallFound = false;
+    double minDis = 10;
+    if (thisBallFound) {
+      for (int i = 0 ; i < balls.length / 2; i++) {
+        if(balls[i * 2] < minDis) {
+          minDis = balls[i * 2];
+          ballDis = balls[i * 2];
+          ballAngle = balls[i * 2 + 1];
+        }
+      }
+    }
   }
 
   /** This method updates if Nano is working as expected
@@ -46,7 +72,7 @@ public class Coprocessor extends SubsystemBase {
       disconnectCnt++;
       if(disconnectCnt > 10){
         isConnected=false;
-        odomTable.getEntry("field_calibration_good").setBoolean(false);
+        // odomTable.getEntry("field_calibration_good").setBoolean(false);
       }
     }
     else{

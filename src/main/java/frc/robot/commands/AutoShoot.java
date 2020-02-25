@@ -3,7 +3,6 @@ package frc.robot.commands;
 
 import com.team254.lib.util.TimeDelayedBoolean;
 
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
@@ -13,11 +12,12 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 
 public class AutoShoot extends CommandBase {
-  private static final double P = 1.0 / 60.0;
-  private double targetAngle, currentAngle, error;
-  private boolean startShooting;
+  // TODO actually tune this
+  private static final double angleP = 1.0 / 40.0, disP = 1;
+  private double targetAngle, currentAngle, angleError;
+  private boolean startShooting, isCanceled, isChangeDis, isWaitForDisStablize;
   private Control control = Control.getInstance();
-  private TimeDelayedBoolean isDone;
+  private TimeDelayedBoolean isDone, isDisStable;
 
   public AutoShoot() {
     addRequirements(Robot.driveSubsystem);
@@ -26,23 +26,34 @@ public class AutoShoot extends CommandBase {
 
   @Override
   public void initialize() {
-    System.out.println("start auto shooting");
+    System.out.printf("START auto shooting with targetTheta:%.1f, robotFieldTheta:%.1f, targetDis:%.1f, targetFound:%b, ballCnt %d\n",
+        Robot.coprocessor.targetFieldTheta, Robot.coprocessor.fieldTheta, Robot.coprocessor.targetDis, 
+        Robot.coprocessor.isTargetFound, Robot.ballHandler.ballCnt);
+    
+    isCanceled = false;
     if(!Robot.coprocessor.isConnected || !Robot.coprocessor.isTargetGood){
       System.out.println("coprocessor and/or CV not working, cancle AutoShoot");
-      this.cancel();
+      isCanceled = true;
     } else if ((!Robot.coprocessor.isPoseGood || !Robot.coprocessor.isFieldCalibrated()) && 
                !Robot.coprocessor.isTargetFound) {
       System.out.println("field not calibrated and no target found, cancle AutoShoot");
-      this.cancel();
+      isCanceled = true;
     } else if (!Robot.coprocessor.isPoseGood) {
       System.out.println("shooting without T265 hasn't been implemented");
-      this.cancel();
-    } else if (Robot.ballHandler.ballCnt == 0 && !control.isOverrideShoot()) {
+      isCanceled = true;
+    } else if (Robot.ballHandler.ballCnt == 0 && !control.isOverrideAutoShoot()) {
       System.out.println("no ball, cancle auto shoot");
-      this.cancel();
+      isCanceled = true;
     }
-
+    
     isDone = new TimeDelayedBoolean(Constants.AUTO_SHOOT_HOLD_TIME);
+    isDisStable = new TimeDelayedBoolean(0.4);
+    if (Robot.coprocessor.targetDis > Constants.MAX_SHOOT_DIS
+        || Robot.coprocessor.targetDis < Constants.MIN_SHOOT_DIS){
+      isChangeDis = true;
+      System.out.println("change of distance required");
+    }
+    isWaitForDisStablize = false;
     startShooting = false;
   }
 
@@ -52,21 +63,43 @@ public class AutoShoot extends CommandBase {
     currentAngle = Robot.coprocessor.fieldTheta;
     targetAngle -= Constants.SHOOTER_ANGLE;
 
-    error = ((targetAngle - currentAngle)%360+360)%360;
-    if(error>180)
-      error -= 360;
+    angleError = ((targetAngle - currentAngle)%360+360)%360;
+    if(angleError>180)
+      angleError -= 360;
+    if(Double.isNaN(angleError))
+      angleError = 0;
     
     SmartDashboard.putNumber("auto_shoot/target_angle", targetAngle);
     SmartDashboard.putNumber("auto_shoot/current_angle", currentAngle);
-    SmartDashboard.putNumber("auto_shoot/error", error);
+    SmartDashboard.putNumber("auto_shoot/error", angleError);
     
-    double speed = P * error;
-    if (Math.abs(error) > 0.5)
-      speed += Math.signum(error) * 0.1;
-    Robot.driveSubsystem.setVelocity(speed * -1, speed);
+    double angleSpeed = angleP * angleError;
+    if (Math.abs(angleError) > 0.5)
+      angleSpeed += Math.signum(angleError) * 0.05;
 
-    if ((Math.abs(error) < Constants.MAX_SHOOT_ANGLE_ERROR && Robot.coprocessor.isTargetFound)
-        || control.isOverrideShoot())
+    if (isChangeDis 
+        && Robot.coprocessor.targetDis < Constants.MAX_SHOOT_DIS
+        && Robot.coprocessor.targetDis > Constants.MIN_SHOOT_DIS) {
+      isChangeDis = false;
+      isWaitForDisStablize = true;
+      isDisStable.update(true);
+    } else if (isWaitForDisStablize && isDisStable.get()) {
+      isWaitForDisStablize = false;
+    }
+    double linearSpeed = 0;
+    if (Math.abs(angleError) < 10 && isChangeDis){
+      if (Robot.coprocessor.targetDis > Constants.MAX_SHOOT_DIS)
+        linearSpeed = disP * (Constants.MAX_SHOOT_DIS - Robot.coprocessor.targetDis) - 0.4;
+      else if (Robot.coprocessor.targetDis < Constants.MIN_SHOOT_DIS)
+        linearSpeed = disP * (Constants.MIN_SHOOT_DIS - Robot.coprocessor.targetDis) + 0.4;
+    }
+    Robot.driveSubsystem.setVelocity(linearSpeed + angleSpeed * -1, 
+                                     linearSpeed + angleSpeed);
+
+    if ((Math.abs(angleError) < Constants.MAX_SHOOT_ANGLE_ERROR 
+        && Robot.coprocessor.isTargetFound
+        && (!isChangeDis && !isWaitForDisStablize))
+        || control.isOverrideAutoShoot())
       startShooting = true;
     
     Robot.ballHandler.desiredRPM = calculateRPM();
@@ -80,22 +113,24 @@ public class AutoShoot extends CommandBase {
 
   @Override
   public void end(boolean interrupted) {
-    System.out.println("auto shoot end");
+    System.out.printf("END auto shooting with targetTheta:%.1f, robotFieldTheta:%.1f, targetDis:%.1f, targetFound:%b, ballCnt %d\n",
+        Robot.coprocessor.targetFieldTheta, Robot.coprocessor.fieldTheta, Robot.coprocessor.targetDis, 
+        Robot.coprocessor.isTargetFound, Robot.ballHandler.ballCnt);
     Robot.ballHandler.state = BallHandlerState.IDLE;
   }
 
   public boolean isFinished() {
-    return isDone.get() && !control.isOverrideShoot();
+    return isCanceled || (isDone.get() && !control.isOverrideAutoShoot());
   }
 
   private double calculateRPM() {
     double dis = Robot.coprocessor.targetDis;
-    if (dis < 3.8)
-      return 5400;
+    // if (dis < 3.8)
+    //   return 5400;
     if (dis < 5)
-      return 4800 + (5 - dis) * 250;
+      return 4800 + (5 - dis) * 100;
     if (dis < 7)
       return 4800 + (dis - 5) * 225;
-    return 5250 + (dis - 7) * 300;
+    return 5250;
   } 
 }

@@ -27,22 +27,24 @@ public class TrajectoryGoTo extends CommandBase {
   private TrajectoryConfig trajectoryConfig;
   private double calculationStartTime;
 
-  private TrajectoryGoTo(boolean reversed) {
+  private TrajectoryGoTo(boolean reversed, double maxV, double maxA, double endV) {
     addRequirements(Robot.driveSubsystem);
-    trajectoryConfig = new TrajectoryConfig(Constants.kMaxSpeedMetersPerSecond, 
-        Constants.kMaxAccelerationMetersPerSecondSquared);
+    trajectoryConfig = new TrajectoryConfig(maxV, maxA);
     trajectoryConfig.setKinematics(Constants.kDriveKinematics);
     trajectoryConfig.addConstraint(Constants.driveVoltageConstraint);
     trajectoryConfig.setReversed(reversed);
+    trajectoryConfig.setEndVelocity(endV);
   }
 
-  public TrajectoryGoTo(List<Pose2d> _waypoints, boolean reversed) {
-    this(reversed);
+  public TrajectoryGoTo(List<Pose2d> _waypoints, boolean reversed, 
+      double maxV, double maxA, double endV) {
+    this(reversed, maxV, maxA, endV);
     waypoints = new ArrayList<Pose2d>(_waypoints);
   }
 
-  public TrajectoryGoTo(List<Translation2d> _interiorWaypoints, Pose2d _finalPose, boolean reversed) {
-    this(reversed);
+  public TrajectoryGoTo(List<Translation2d> _interiorWaypoints, 
+      Pose2d _finalPose, boolean reversed, double maxV, double maxA, double endV) {
+    this(reversed, maxV, maxA, endV);
     interiorWaypoints =new ArrayList<Translation2d>(_interiorWaypoints);
     finalPose = _finalPose;
   }

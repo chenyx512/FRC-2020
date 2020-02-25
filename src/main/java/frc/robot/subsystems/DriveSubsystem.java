@@ -38,7 +38,7 @@ public class DriveSubsystem extends SubsystemBase {
   public CANEncoder leftEncoder, rightEncoder;
   private boolean isBrakeMode = false;
   private DriveControlState driveControlState = DriveControlState.OPEN_LOOP;
-  TrajectoryFollower trajectoryFollower = new TrajectoryFollower();
+  private TrajectoryFollower trajectoryFollower = new TrajectoryFollower();
 
   public DriveSubsystem() {
     leftMaster = new CANSparkMax(12, MotorType.kBrushless);
@@ -102,6 +102,12 @@ public class DriveSubsystem extends SubsystemBase {
       trajectoryFollower.isDone();
   }
 
+  public double trajectoryTimeLeft() {
+    if (driveControlState != DriveControlState.TRAJECTORY_FOLLOWING)
+      return 0;
+    return trajectoryFollower.trajectoryTimeLeft();
+  }
+
   public void setTrajectory(final Trajectory trajectory) {
     if (driveControlState != DriveControlState.TRAJECTORY_FOLLOWING) {
       NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
@@ -129,7 +135,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void setVelocity(final double leftMPS, final double rightMPS) {
     // double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
     // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
-    
+    // System.out.printf("%f %f\n", leftMPS, rightMPS);
     if (driveControlState == DriveControlState.OPEN_LOOP) {
       setBrakeMode(true);
       driveControlState = DriveControlState.VELOCITY_CONTROL;
@@ -156,10 +162,10 @@ public class DriveSubsystem extends SubsystemBase {
     if (driveControlState != DriveControlState.OPEN_LOOP) {
       NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
           setString(driveControlState.toString());
-      setBrakeMode(false);
       driveControlState = DriveControlState.OPEN_LOOP;
       System.out.println("enter open loop mode");
     }
+    setBrakeMode(driveSignal.getBrakeMode());
     leftMaster.set(driveSignal.getLeft());
     rightMaster.set(driveSignal.getRight());
   }

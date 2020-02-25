@@ -1,4 +1,4 @@
-package frc.robot.commands;
+package frc.robot.commands.manual;
 
 
 import com.team254.lib.util.CheesyDriveHelper;
@@ -29,6 +29,12 @@ public class DriveWithJoystick extends CommandBase {
     double rotation_sign = (isQuickTurn || speed>0? 1:-1) ;
     double rotation = control.getRotationThrottle();
     rotation = rotation * rotation * Math.signum(rotation) * 0.7;
+
+    if (control.isReversed()){
+      speed *= -1;
+      // rotation *= -1;
+    }
+
     Robot.driveSubsystem.setOpenLoop(cheesyDrive.cheesyDrive(
       speed,
       rotation * rotation_sign, 

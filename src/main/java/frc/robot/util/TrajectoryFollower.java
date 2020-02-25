@@ -28,6 +28,11 @@ public class TrajectoryFollower {
   }
 
   public boolean isDone() {
-      return Timer.getFPGATimestamp() - startTime > trajectory.getTotalTimeSeconds();
+    return Timer.getFPGATimestamp() - startTime > trajectory.getTotalTimeSeconds();
+  }
+
+  public double trajectoryTimeLeft() {
+    double RV = startTime + trajectory.getTotalTimeSeconds() - Timer.getFPGATimestamp();
+    return Math.max(0, RV);
   }
 }

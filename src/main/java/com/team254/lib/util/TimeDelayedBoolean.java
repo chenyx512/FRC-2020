@@ -23,6 +23,6 @@ public class TimeDelayedBoolean {
     }
 
     public boolean get() {
-        return m_old && (lastTrueTime - Timer.getFPGATimestamp()) >= timeout;
+        return m_old && (Timer.getFPGATimestamp() - lastTrueTime) >= timeout;
     }
 }

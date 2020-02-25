@@ -20,8 +20,9 @@ public class Constants {
   // drivetrain physical characteristic
   public static final double kTrackwidthMeters = 0.7112 / 0.93;
   public static final DifferentialDriveKinematics kDriveKinematics = new DifferentialDriveKinematics(kTrackwidthMeters);
-  public static final double kMaxSpeedMetersPerSecond = 1.2; // 3
-  public static final double kMaxAccelerationMetersPerSecondSquared = 2; //
+  public static final double DRIVE_MAX_V = 1.5; // 3
+  public static final double INTAKE_MAX_V = 1.0;
+  public static final double DRIVE_MAX_A = 1.5; //
   public static final double ks = 0.101;
   public static final double kv = 2.44;
   public static final double ka = 0.38;
@@ -46,12 +47,14 @@ public class Constants {
   public static final double kRamseteZeta = 0.7;
 
   // AutoShoot
-  public static final double MAX_SHOOT_ANGLE_ERROR = 3;
-  public static final double AUTO_SHOOT_HOLD_TIME = 0.5;
+  public static final double MAX_SHOOT_ANGLE_ERROR = 2;
+  public static final double AUTO_SHOOT_HOLD_TIME = 0.25;
   public static final double MAX_SHOOT_RPM_ERROR = 50;
-  public static final double SHOOTER_ANGLE = 2; // deg to the left from center line
-  public static final double MIN_SHOOT_GAP_TIME = 0.5;
-  public static final double MAX_SHOOTER_FREE_SPIN_TIME = 2.0;
+  public static final double SHOOTER_ANGLE = 3; // deg to the left from center line
+  public static final double MIN_SHOOT_GAP_TIME = 0.35;
+  public static final double MAX_SHOOTER_FREE_SPIN_TIME = 1.5;
+  public static final double MIN_SHOOT_DIS = 3.5;
+  public static final double MAX_SHOOT_DIS = 6;
 
   public static class Gains {
     public final double kP;
