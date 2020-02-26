@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import math as m
 
+from SoundPlayer import SoundPlayer
+
 
 FIELD_LENGTH = 15.98
 FIELD_WIDTH = 8.21
@@ -20,13 +22,13 @@ def getImagePoint(fieldX, fieldY):
     )
 
 LENGTH = 50
-def draw_robot(image, x, y, theta):
+def draw_robot(image, x, y, theta, color=(0, 255, 0), scale=1.0):
     robot_center = getImagePoint(x, y)
     theta = m.radians(180 - theta)
-    dx = (robot_center[0] + int(LENGTH * m.cos(theta)),
-          robot_center[1] + int(LENGTH * m.sin(theta)))
-    cv2.line(image, robot_center, dx, (0, 255, 0), 5)
-    cv2.circle(image, getImagePoint(x, y), 20, (0, 255, 0), -1)
+    dx = (robot_center[0] + int(LENGTH * m.cos(theta) * scale),
+          robot_center[1] + int(LENGTH * m.sin(theta) * scale))
+    cv2.line(image, robot_center, dx, color, int(5 * scale))
+    cv2.circle(image, getImagePoint(x, y), int(20 * scale), color, -1)
 
 
 def draw_trajectory(image, trajectory):
@@ -46,12 +48,20 @@ while True:
     field_y = NetworkTables.getEntry("/odom/field_y").getDouble(0)
     field_theta = NetworkTables.getEntry("/odom/field_t").getDouble(180)
     draw_robot(frame, field_x, field_y, field_theta)
-    if NetworkTables.getEntry("/robot/drivetrain/state").getString("nothing")\
-            == "TRAJECTORY_FOLLOWING":
-        trajectory = NetworkTables.getEntry("/robot/drivetrain/trajectory").\
+
+    drivetrain_state = NetworkTables.getEntry("/drivetrain/state").getString("OPEN_LOOP")
+    auto_state = NetworkTables.getEntry("/drivetrain/auto_state").getString("MANUAL")
+    if auto_state == "AUTO_SHOOT_BALL":
+        SoundPlayer.beep(1)
+    else:
+        SoundPlayer.beep(0)
+
+    if drivetrain_state == "TRAJECTORY_FOLLOWING":
+        trajectory = NetworkTables.getEntry("/drivetrain/trajectory").\
             getDoubleArray([])
         if len(trajectory) == 200:
             draw_trajectory(frame, trajectory)
 
+    frame = cv2.resize(frame, (400, 200))
     cv2.imshow("visual", frame)
     cv2.waitKey(10)

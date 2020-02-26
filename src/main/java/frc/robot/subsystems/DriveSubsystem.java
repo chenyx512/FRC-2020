@@ -83,6 +83,8 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("right_position", rightEncoder.getPosition() / Constants.ENCODER_UNITpMETER);
     SmartDashboard.putNumber("right_mps", rightEncoder.getVelocity() / Constants.RPMpMPS);
     SmartDashboard.putNumber("left_mps", leftEncoder.getVelocity()/ Constants.RPMpMPS);
+    NetworkTableInstance.getDefault().getEntry("/drivetrain/state").setString(
+        driveControlState.toString());
     if (Constants.SEND_ENCODER_V)
       NetworkTableInstance.getDefault().getEntry("/odom/encoder_v").setDouble(
         rightEncoder.getVelocity() / Constants.RPMpMPS / 2 +
@@ -110,8 +112,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void setTrajectory(final Trajectory trajectory) {
     if (driveControlState != DriveControlState.TRAJECTORY_FOLLOWING) {
-      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
-          setString(driveControlState.toString());
       setBrakeMode(true);
       driveControlState = DriveControlState.TRAJECTORY_FOLLOWING;
       System.out.println("enter trajectory following mode");
@@ -127,7 +127,7 @@ public class DriveSubsystem extends SubsystemBase {
       stateList[i * 2] = coord.getX();
       stateList[i * 2 + 1] = coord.getY();
     }
-    NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/trajectory").
+    NetworkTableInstance.getDefault().getEntry("/drivetrain/trajectory").
         setDoubleArray(stateList);
     trajectoryFollower.startTrajectory(trajectory);
   }
@@ -140,8 +140,6 @@ public class DriveSubsystem extends SubsystemBase {
       setBrakeMode(true);
       driveControlState = DriveControlState.VELOCITY_CONTROL;
       System.out.println("enter velocity control mode");
-      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
-          setString(driveControlState.toString());
     }
 
     leftController.setReference(
@@ -160,8 +158,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   public void setOpenLoop(final DriveSignal driveSignal) {
     if (driveControlState != DriveControlState.OPEN_LOOP) {
-      NetworkTableInstance.getDefault().getEntry("/robot/drivetrain/state").
-          setString(driveControlState.toString());
       driveControlState = DriveControlState.OPEN_LOOP;
       System.out.println("enter open loop mode");
     }

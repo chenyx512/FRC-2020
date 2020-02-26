@@ -81,7 +81,7 @@ public class Control {
         return drive.getRawButtonPressed(MANUAL_SHOOT_BUTTON);
     }
     public boolean isAutoIntake() {
-        return drive.getRawButton(AUTO_INTAKE_BUTTON);
+        return drive.getRawButtonPressed(AUTO_INTAKE_BUTTON);
     }
     public boolean isOverrideAutoIntake() {
         return drive.getRawButton(AUTO_INTAKE_BUTTON) 

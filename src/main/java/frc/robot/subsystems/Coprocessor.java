@@ -16,15 +16,17 @@ public class Coprocessor extends SubsystemBase {
   public NetworkTable odomTable = NetworkTableInstance.getDefault().getTable("odom");
 
   // flags coresponding to connection of Nano, tracking camera, RGB camera
-  public boolean isConnected, isPoseGood, isTargetGood;
-  public boolean isTargetFound;
+  public boolean isConnected;
+  // target
+  public double targetFieldTheta, targetRelativeDirLeft, targetDis;
+  public boolean isTargetFound, isTargetGood;
+  // pose
   public double fieldX, fieldY, fieldTheta;
-  public double robotTheta;
-  public double targetFieldTheta, targetRelativeDirLeft;
-  public boolean isBallFound = false;
-  private double lastBallTime = 0;
-  public double ballDis, ballAngle;
-  public double targetDis;
+  public boolean isPoseGood;
+  // ball
+  public double ballDis, ballFieldTheta, ballRelativeDirLeft;
+  public boolean isBallGood, isBallFound;
+  public double innerDis, innerAngleDelta;
 
   private double lastClientTime;
   private int disconnectCnt;
@@ -35,32 +37,31 @@ public class Coprocessor extends SubsystemBase {
   @Override
   public void periodic() {
     checkConnection();
-    
-    isTargetFound = odomTable.getEntry("target_found").getBoolean(false);
+    // pose
     fieldX = odomTable.getEntry("field_x").getDouble(0);
     fieldY = odomTable.getEntry("field_y").getDouble(0);
     fieldTheta = odomTable.getEntry("field_t").getDouble(0);
-    robotTheta = odomTable.getEntry("robot_t").getDouble(0);
+    // target
+    isTargetFound = odomTable.getEntry("target_found").getBoolean(false);
     targetFieldTheta = odomTable.getEntry("target_field_theta").getDouble(0);
     targetRelativeDirLeft = odomTable.getEntry("target_relative_dir_left").getDouble(0);
     targetDis = odomTable.getEntry("target_dis").getDouble(0);
-
-    var balls = odomTable.getEntry("ball").getDoubleArray(new double [0]);
-    boolean thisBallFound = balls.length > 0 && balls.length % 2 == 0;
-    if (thisBallFound) {
-      lastBallTime = Timer.getFPGATimestamp();
-      isBallFound = true;
-    } else if (Timer.getFPGATimestamp() - lastBallTime > 0.2)
-      isBallFound = false;
-    double minDis = 10;
-    if (thisBallFound) {
-      for (int i = 0 ; i < balls.length / 2; i++) {
-        if(balls[i * 2] < minDis) {
-          minDis = balls[i * 2];
-          ballDis = balls[i * 2];
-          ballAngle = balls[i * 2 + 1];
-        }
-      }
+    // ball
+    isBallFound = odomTable.getEntry("ball_found").getBoolean(false);
+    ballDis = odomTable.getEntry("ball_dis").getDouble(0);
+    ballRelativeDirLeft = odomTable.getEntry("ball_to_left").getDouble(0);
+    ballFieldTheta = odomTable.getEntry("ball_field_theta").getDouble(0);
+    // solve the triangle between robot, outer target, and inner target
+    if (isTargetFound) {
+      // law of cos
+      innerDis = Math.sqrt(Math.max(0, 
+          0.74 * 0.74 + targetDis * targetDis - 
+          1.48 * targetDis * Math.cos(Math.toRadians(-targetFieldTheta))));
+      // law of sine
+      innerAngleDelta = Math.toDegrees(Math.asin(0.74 * 
+          Math.sin(Math.toRadians(-targetFieldTheta)) / innerDis));
+      // actual_target = target_theta - delta
+      // System.out.printf("%.2f %.2f\n", innerDis, innerAngleDelta); 
     }
   }
 
@@ -70,7 +71,7 @@ public class Coprocessor extends SubsystemBase {
     double clientTime = odomTable.getEntry("client_time").getDouble(0);
     if(clientTime == lastClientTime){
       disconnectCnt++;
-      if(disconnectCnt > 10){
+      if(disconnectCnt > 15){
         isConnected=false;
         // odomTable.getEntry("field_calibration_good").setBoolean(false);
       }
@@ -81,9 +82,24 @@ public class Coprocessor extends SubsystemBase {
     }
     lastClientTime = clientTime;
 
-    SmartDashboard.putBoolean("coprocessor_connected", isConnected);
     isTargetGood = odomTable.getEntry("target_good").getBoolean(false);
     isPoseGood = odomTable.getEntry("pose_good").getBoolean(false);
+    isBallGood = odomTable.getEntry("ball_good").getBoolean(false);
+    NetworkTableInstance.getDefault().getEntry("/coprocessor/working").
+        setBoolean(isConnected && isPoseGood && isTargetGood && isBallGood);
+    String error = "";
+    if (!isConnected)
+      error = "COMM";
+    else {
+      if (!isTargetGood)
+        error += "CV|";
+      if (!isPoseGood)
+        error += "POSE|";
+      if (!isBallGood)
+        error += "BALL";
+    } 
+    NetworkTableInstance.getDefault().getEntry("/coprocessor/error").
+        setString(error);
   }
 
   public boolean isFieldCalibrated() {

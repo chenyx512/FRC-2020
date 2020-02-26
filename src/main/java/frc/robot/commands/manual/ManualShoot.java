@@ -3,12 +3,13 @@ package frc.robot.commands.manual;
 import com.team254.lib.util.TimeDelayedBoolean;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 public class ManualShoot extends CommandBase {
   private int targetBallCnt, shootNum;
-  private TimeDelayedBoolean isDone;
+  private TimeDelayedBoolean isDone = new TimeDelayedBoolean(Constants.AUTO_SHOOT_HOLD_TIME);
 
   public ManualShoot(int _shootNum) {
     addRequirements(Robot.ballHandler);

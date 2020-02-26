@@ -16,7 +16,6 @@ import frc.robot.commands.manual.*;
 import frc.robot.subsystems.*;
 import frc.robot.subsystems.BallHandler.BallHandlerState;
 
-
 public class Robot extends TimedRobot {
   public static DriveSubsystem driveSubsystem = new DriveSubsystem();
   public static BallHandler ballHandler = new BallHandler();
@@ -29,6 +28,8 @@ public class Robot extends TimedRobot {
   
   public static double matchStartTime;
 
+  public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
+
   private static Control control = Control.getInstance();
   private static AutoShoot autoShoot = new AutoShoot();
   private static ManualShoot manualShoot = new ManualShoot();
@@ -40,7 +41,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
-    driveSubsystem.setDefaultCommand(new DriveWithJoystick());
+    driveSubsystem.setDefaultCommand(driveWithJoystick);
     ballHandler.setDefaultCommand(new HandleBallWithJoystick());
     climber.setDefaultCommand(new ClimbWithJoystick());
     panelTurner.setDefaultCommand(new TurnPanelWithJoystick());
@@ -67,7 +68,7 @@ public class Robot extends TimedRobot {
         // back off
       ).schedule();
     } else {
-      new ShootPickupOursThreeShoot().schedule();
+      new TestAutoCommand().schedule();
     }
   }
 
@@ -102,8 +103,7 @@ public class Robot extends TimedRobot {
     
     if (control.isAutoShoot() || control.isOverrideAutoShoot())
       autoShoot.schedule();
-    else if ((control.isAutoIntake() || control.isOverrideAutoIntake())
-             && !autoIntake.isScheduled())
+    else if (control.isAutoIntake() || control.isOverrideAutoIntake())
       autoIntake.schedule();
     else if (control.isManualShoot())
       manualShoot.schedule();
@@ -112,7 +112,6 @@ public class Robot extends TimedRobot {
     else if(control.isEject())
       eject.schedule();
 
-    
     // PanelTurner
     
   }

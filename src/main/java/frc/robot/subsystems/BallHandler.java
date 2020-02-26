@@ -38,7 +38,7 @@ public class BallHandler extends SubsystemBase {
   private CANSparkMax shooterMaster = new CANSparkMax(31, MotorType.kBrushless);
   private CANSparkMax shooterSlave = new CANSparkMax(32, MotorType.kBrushless);
   private CANSparkMax shooterConveyer = new CANSparkMax(23, MotorType.kBrushless);
-  private CANEncoder encoder;
+  public CANEncoder encoder;
   private CANPIDController shooterPIDController;
   private DigitalInput shooterBeamBreaker = new DigitalInput(0);
   // auto
