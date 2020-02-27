@@ -13,18 +13,23 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 
 public class AutoShoot extends CommandBase {
-  // TODO actually tune this
-  private boolean innerGoal = true;
+  public boolean innerGoal;
   private static final double angleP = 1.0 / 40.0, disP = 1;
   private double targetAngle, currentAngle, angleError;
+  private double maxDis, minDis;
   private double startTime = 0;
   private boolean startShooting, isCanceled, isChangeDis, isWaitForDisStablize;
   private Control control = Control.getInstance();
   private TimeDelayedBoolean isDone, isDisStable;
 
-  public AutoShoot() {
+  public AutoShoot(boolean _innerGoal) {
     addRequirements(Robot.driveSubsystem);
     addRequirements(Robot.ballHandler);
+    innerGoal = _innerGoal;
+  }
+
+  public AutoShoot() {
+    this(false);
   }
 
   @Override
@@ -47,20 +52,21 @@ public class AutoShoot extends CommandBase {
     } else if (Robot.ballHandler.ballCnt == 0 && !control.isOverrideAutoShoot()) {
       System.out.println("no ball, cancle auto shoot");
       isCanceled = true;
-    } else {
-      startTime = Timer.getFPGATimestamp();
-      isDone = new TimeDelayedBoolean(Constants.AUTO_SHOOT_HOLD_TIME);
-      isDisStable = new TimeDelayedBoolean(0.4);
-      if (Robot.coprocessor.targetDis > Constants.MAX_SHOOT_DIS
-          || Robot.coprocessor.targetDis < Constants.MIN_SHOOT_DIS){
-        isChangeDis = true;
-        System.out.println("change of distance required");
-      }
-      isWaitForDisStablize = false;
-      startShooting = false;
-      NetworkTableInstance.getDefault().getEntry("/drivetrain/auto_state").setString(
-          "AUTO_SHOOT");
     }
+
+    startTime = Timer.getFPGATimestamp();
+    isDone = new TimeDelayedBoolean(Constants.AUTO_SHOOT_HOLD_TIME);
+    isDisStable = new TimeDelayedBoolean(0.4);
+    minDis = innerGoal ? Constants.INNER_MIN_SHOOT_DIS : Constants.OUTER_MIN_SHOOT_DIS;
+    maxDis = innerGoal ? Constants.INNER_MAX_SHOOT_DIS : Constants.OUTER_MAX_SHOOT_DIS;
+    if (Robot.coprocessor.targetDis > maxDis || Robot.coprocessor.targetDis < minDis){
+      isChangeDis = true;
+      System.out.println("change of distance required");
+    }
+    isWaitForDisStablize = false;
+    startShooting = false;
+    NetworkTableInstance.getDefault().getEntry("/drivetrain/auto_state").setString(
+        "AUTO_SHOOT");
   }
 
   @Override
@@ -82,12 +88,12 @@ public class AutoShoot extends CommandBase {
     SmartDashboard.putNumber("auto_shoot/error", angleError);
     
     double angleSpeed = angleP * angleError;
-    if (Math.abs(angleError) > 2.0) // 0.4 
-      angleSpeed += Math.signum(angleError) * 0.05;
+    if (Math.abs(angleError) > 0.4)
+      angleSpeed += Math.signum(angleError) * 0.08;
 
     if (isChangeDis 
-        && Robot.coprocessor.targetDis < Constants.MAX_SHOOT_DIS
-        && Robot.coprocessor.targetDis > Constants.MIN_SHOOT_DIS) {
+        && Robot.coprocessor.targetDis < maxDis
+        && Robot.coprocessor.targetDis > minDis) {
       isChangeDis = false;
       isWaitForDisStablize = true;
       isDisStable.update(true);
@@ -96,10 +102,10 @@ public class AutoShoot extends CommandBase {
     }
     double linearSpeed = 0;
     if (Math.abs(angleError) < 10 && isChangeDis){
-      if (Robot.coprocessor.targetDis > Constants.MAX_SHOOT_DIS)
-        linearSpeed = disP * (Constants.MAX_SHOOT_DIS - Robot.coprocessor.targetDis) - 0.4;
-      else if (Robot.coprocessor.targetDis < Constants.MIN_SHOOT_DIS)
-        linearSpeed = disP * (Constants.MIN_SHOOT_DIS - Robot.coprocessor.targetDis) + 0.4;
+      if (Robot.coprocessor.targetDis > maxDis)
+        linearSpeed = disP * (maxDis - Robot.coprocessor.targetDis) - 0.4;
+      else if (Robot.coprocessor.targetDis < minDis)
+        linearSpeed = disP * (minDis - Robot.coprocessor.targetDis) + 0.4;
     }
     Robot.driveSubsystem.setVelocity(linearSpeed + angleSpeed * -1, 
                                      linearSpeed + angleSpeed);
@@ -120,9 +126,9 @@ public class AutoShoot extends CommandBase {
     if (Robot.ballHandler.ballCnt == 0)
       isDone.update(true);
     
-    System.out.printf("at %.2f desired %.2f actual %.2f\n",
-        Timer.getFPGATimestamp() - startTime, Robot.ballHandler.desiredRPM,
-        Robot.ballHandler.encoder.getVelocity());
+    // System.out.printf("at %.2f desired %.2f actual %.2f\n",
+    //     Timer.getFPGATimestamp() - startTime, Robot.ballHandler.desiredRPM,
+    //     Robot.ballHandler.encoder.getVelocity());
   }
 
   @Override
@@ -140,12 +146,9 @@ public class AutoShoot extends CommandBase {
   }
 
   private double calculateRPM(double dis) {
-    // if (dis < 3.8)
-    //   return 5400;
     if (dis < 5)
-      return 4800 + (5 - dis) * 100;
-    if (dis < 7)
-      return 4800 + (dis - 5) * 225;
-    return 5250;
+      return 5150;
+    else 
+      return Math.max(5550, 5150 + 200 * (dis - 5));
   } 
 }

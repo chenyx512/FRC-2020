@@ -62,6 +62,7 @@ public class Coprocessor extends SubsystemBase {
           Math.sin(Math.toRadians(-targetFieldTheta)) / innerDis));
       // actual_target = target_theta - delta
       // System.out.printf("%.2f %.2f\n", innerDis, innerAngleDelta); 
+      odomTable.getEntry("inner_target_dis").setDouble(innerDis);
     }
   }
 

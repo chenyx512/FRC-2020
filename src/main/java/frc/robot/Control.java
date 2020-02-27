@@ -64,28 +64,31 @@ public class Control {
     private static final int MANUAL_INTAKE_BUTTON = 3;
     private static final int EJECT_BUTTON = 6;
 
-    private static final int SECOND_SHOOT_BUTTON = 4;
-    private static final int SECOND_MANUAL_INTAKE_BUTTON = 1;
+    private static final int SECOND_AUTO_SHOOT_BUTTON = 4;
+    private static final int SECOND_AUTO_INTAKE_BUTTON = 1;
+    private static final int SECOND_MANUAL_INTAKE_BUTTON = 7;
     private static final int SECOND_EJECT_BUTTON = 2;
     public boolean isAutoShoot() {
         return (drive.getRawButtonPressed(AUTO_SHOOT_BUTTON) || 
-                second.getRawButtonPressed(SECOND_SHOOT_BUTTON))
+                second.getRawButtonPressed(SECOND_AUTO_SHOOT_BUTTON))
                 && !isOverride();
     }
     public boolean isOverrideAutoShoot() {
         return (drive.getRawButton(AUTO_SHOOT_BUTTON) || 
-                second.getRawButton(SECOND_SHOOT_BUTTON))
+                second.getRawButton(SECOND_AUTO_SHOOT_BUTTON))
                  && isOverride();
     }
     public boolean isManualShoot() {
         return drive.getRawButtonPressed(MANUAL_SHOOT_BUTTON);
     }
     public boolean isAutoIntake() {
-        return drive.getRawButtonPressed(AUTO_INTAKE_BUTTON);
+        return drive.getRawButtonPressed(AUTO_INTAKE_BUTTON)
+            || second.getRawButtonPressed(SECOND_AUTO_INTAKE_BUTTON);
     }
     public boolean isOverrideAutoIntake() {
-        return drive.getRawButton(AUTO_INTAKE_BUTTON) 
-               && isOverride();
+        return (drive.getRawButton(AUTO_INTAKE_BUTTON) 
+            || second.getRawButton(SECOND_AUTO_INTAKE_BUTTON))
+            && isOverride();
     }
     public boolean isManualIntake() {
         return (drive.getRawButtonPressed(MANUAL_INTAKE_BUTTON) ||
@@ -95,7 +98,7 @@ public class Control {
     public boolean isOverrideManualIntake() {
         return (drive.getRawButton(MANUAL_INTAKE_BUTTON)
                 || second.getRawButton(SECOND_MANUAL_INTAKE_BUTTON))
-                 && isOverride();
+                && isOverride();
     }
     public boolean isEject() {
         return (drive.getRawButton(EJECT_BUTTON)
@@ -106,6 +109,9 @@ public class Control {
         return (drive.getRawButton(EJECT_BUTTON) 
                 || second.getRawButton(SECOND_EJECT_BUTTON))
                 && isOverride();
+    }
+    public boolean isChangeInner() {
+        return drive.getRawButtonPressed(12) || second.getRawButtonPressed(5);
     }
 
     // POV: 0 top 45 top right, -1 nothing
@@ -135,7 +141,7 @@ public class Control {
         }
     }
     public boolean isPositionControl() {
-        return false;
+        return drive.getRawButtonPressed(9);
     }
 
     // Climber

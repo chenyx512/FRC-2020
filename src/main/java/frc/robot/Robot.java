@@ -9,6 +9,7 @@ import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.commands.*;
 import frc.robot.commands.Auto.*;
@@ -37,7 +38,8 @@ public class Robot extends TimedRobot {
   private static ManualIntake manualIntake = new ManualIntake();
   private static Eject eject = new Eject();
 
-  // private static PanelTurnPositionControl positionControl = new PanelTurnPositionControl();
+  private static PanelTurnPositionControl positionControl = 
+      new PanelTurnPositionControl();
 
   @Override
   public void robotInit() {
@@ -49,7 +51,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    Robot.ballHandler.ballCnt = 3;
+    Robot.ballHandler.ballCnt = 1;
     matchStartTime = Timer.getFPGATimestamp();
     while (coprocessor.isConnected 
            && !coprocessor.isFieldCalibrated()
@@ -59,14 +61,12 @@ public class Robot extends TimedRobot {
       coprocessor.calibrate_field();
       Timer.delay(0.02);
     }
-    if (!coprocessor.isConnected || !coprocessor.isTargetGood) {
-      // dump all balls
-      // back off
-    } else if (!coprocessor.isPoseGood) {
-      new SequentialCommandGroup(
-        new AutoShoot().withTimeout(7)
-        // back off
-      ).schedule();
+    if (!coprocessor.isConnected || !coprocessor.isTargetGood 
+            || !coprocessor.isPoseGood) {
+              new SequentialCommandGroup(
+                new ManualShoot(3).withTimeout(4),
+                new DriveUntil(1).withTimeout(3)
+              ).schedule();
     } else {
       new TestAutoCommand().schedule();
     }
@@ -79,7 +79,9 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     // sequence of running: subsystems, buttons, commands
     NetworkTableInstance.getDefault().getEntry("/odom/video_output").setString(
-        control.isReversed()? "shoot":"intake");
+        control.isReversed() && !autoIntake.isScheduled() && !manualIntake.isScheduled() ?
+        "shoot":"intake"
+    );
     CommandScheduler.getInstance().run();
     NetworkTableInstance.getDefault().flush();
   }
@@ -100,6 +102,9 @@ public class Robot extends TimedRobot {
     // ballHandler
     if (control.isResetBallCnt())
       ballHandler.ballCnt = 0;
+    if (control.isChangeInner())
+      autoShoot.innerGoal ^= true;
+    SmartDashboard.putBoolean("isInner", autoShoot.innerGoal);
     
     if (control.isAutoShoot() || control.isOverrideAutoShoot())
       autoShoot.schedule();
@@ -113,6 +118,7 @@ public class Robot extends TimedRobot {
       eject.schedule();
 
     // PanelTurner
-    
+    if (control.isPositionControl())
+      positionControl.schedule();
   }
 }

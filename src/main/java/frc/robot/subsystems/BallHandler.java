@@ -64,6 +64,8 @@ public class BallHandler extends SubsystemBase {
     setSpark(intakeConveyer);
 
     ballIntake.setInverted(true);
+    ballIntake.setSmartCurrentLimit(20);
+    ballIntake.burnFlash();
     shooterConveyer.setInverted(true);
     shooterMaster.setInverted(true);
     shooterSlave.follow(shooterMaster, true);
@@ -80,7 +82,8 @@ public class BallHandler extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // desiredRPM = Control.getInstance().getSlider() * 2000 + 3700;
+    // System.out.println(ballIntake.getOutputCurrent());
+    // desiredRPM = Control.getInstance().getSlider() * 1000 + 4600;
     switch (state) {
       case IDLE:
         ballIntake.set(0);
@@ -93,7 +96,7 @@ public class BallHandler extends SubsystemBase {
       case PRESPIN:
         ballIntake.set(0);
         intakeConveyer.set(0);
-        shooterConveyer.set(shooterBeamBreaker.get() == NO_BALL? 0.7 : 0);
+        shooterConveyer.set(shooterBeamBreaker.get() == NO_BALL? 1 : 0);
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity,
             0, Constants.SHOOTER_KS);
         isFreeSpinning.update(true);
@@ -131,7 +134,7 @@ public class BallHandler extends SubsystemBase {
       case INTAKE:
         ballIntake.set(1);
         intakeConveyer.set(1);
-        shooterConveyer.set(shooterBeamBreaker.get() == BALL? 0 : 0.7);
+        shooterConveyer.set(shooterBeamBreaker.get() == BALL? 0 : 1);
         shooterMaster.set(0);
         isFreeSpinning.update(false);
         break;

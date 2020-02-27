@@ -17,6 +17,7 @@ public class PanelTurner extends SubsystemBase {
     setSpark(wheel);
     setSpark(actuator);
     wheelEncoder = wheel.getEncoder();
+    wheel.setIdleMode(IdleMode.kBrake);
   }
 
   private void setSpark(CANSparkMax spark) {

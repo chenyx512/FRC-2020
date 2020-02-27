@@ -51,8 +51,10 @@ while True:
 
     drivetrain_state = NetworkTables.getEntry("/drivetrain/state").getString("OPEN_LOOP")
     auto_state = NetworkTables.getEntry("/drivetrain/auto_state").getString("MANUAL")
-    if auto_state == "AUTO_SHOOT_BALL":
+    if auto_state == "AUTO_SHOOT_BALL" or auto_state == "AUTO_INTAKE_BALL":
         SoundPlayer.beep(1)
+    elif auto_state == "AUTO_INTAKE_NO_BALL":
+        SoundPlayer.beep(2)
     else:
         SoundPlayer.beep(0)
 

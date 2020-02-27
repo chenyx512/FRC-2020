@@ -60,7 +60,7 @@ public class AutoIntake extends CommandBase {
     
     double linearSpeed = 0;
     if (Math.abs(angleError) < 10)
-      linearSpeed = 0.6 + 0.4 * (Robot.coprocessor.ballDis);
+      linearSpeed = 0.5 + 0.7 * (Robot.coprocessor.ballDis);
     
     Robot.driveSubsystem.setVelocity(linearSpeed + angleSpeed * -1, 
                                      linearSpeed + angleSpeed);
