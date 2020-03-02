@@ -54,9 +54,9 @@ public class Constants {
   public static final double MIN_SHOOT_GAP_TIME = 0.35; // 0.35
   public static final double MAX_SHOOTER_FREE_SPIN_TIME = 1;
   public static final double OUTER_MIN_SHOOT_DIS = 3.7;
-  public static final double OUTER_MAX_SHOOT_DIS = 7;
+  public static final double OUTER_MAX_SHOOT_DIS = 8;
   public static final double INNER_MIN_SHOOT_DIS = 3.7;
-  public static final double INNER_MAX_SHOOT_DIS = 5;
+  public static final double INNER_MAX_SHOOT_DIS = 4.7;
 
   public static class Gains {
     public final double kP;

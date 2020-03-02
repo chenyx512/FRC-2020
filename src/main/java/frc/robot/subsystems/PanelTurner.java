@@ -18,10 +18,20 @@ public class PanelTurner extends SubsystemBase {
     setSpark(actuator);
     wheelEncoder = wheel.getEncoder();
     wheel.setIdleMode(IdleMode.kBrake);
+    wheel.setSmartCurrentLimit(20);
+    wheel.burnFlash();
   }
 
   private void setSpark(CANSparkMax spark) {
     spark.restoreFactoryDefaults();
     spark.setIdleMode(IdleMode.kBrake);
+  }
+
+  public void startTurnWheel() {
+    wheel.set(-1);
+  }
+
+  public void stop() {
+    wheel.set(0);
   }
 }

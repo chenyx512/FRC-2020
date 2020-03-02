@@ -7,6 +7,7 @@ import com.team254.lib.util.DriveSignal;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,7 +33,7 @@ public class Robot extends TimedRobot {
   public static DriveWithJoystick driveWithJoystick = new DriveWithJoystick();
 
   private static Control control = Control.getInstance();
-  private static AutoShoot autoShoot = new AutoShoot();
+  private static AutoShoot autoShoot = new AutoShoot(false);
   private static ManualShoot manualShoot = new ManualShoot();
   private static AutoIntake autoIntake = new AutoIntake();
   private static ManualIntake manualIntake = new ManualIntake();
@@ -51,8 +52,10 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
-    Robot.ballHandler.ballCnt = 1;
+    Robot.ballHandler.ballCnt = 3;
     matchStartTime = Timer.getFPGATimestamp();
+    new StartEndCommand(panelTurner::startTurnWheel, panelTurner::stop, panelTurner)
+        .withTimeout(2).schedule();
     while (coprocessor.isConnected 
            && !coprocessor.isFieldCalibrated()
            && coprocessor.isPoseGood
@@ -61,14 +64,16 @@ public class Robot extends TimedRobot {
       coprocessor.calibrate_field();
       Timer.delay(0.02);
     }
-    if (!coprocessor.isConnected || !coprocessor.isTargetGood 
-            || !coprocessor.isPoseGood) {
+    if (!coprocessor.isConnected || !coprocessor.isTargetGood) {
+              System.out.println("emergency move");
               new SequentialCommandGroup(
                 new ManualShoot(3).withTimeout(4),
                 new DriveUntil(1).withTimeout(3)
               ).schedule();
+    } else if (!coprocessor.isPoseGood) {
+      new SixBall().schedule();
     } else {
-      new TestAutoCommand().schedule();
+      new SevenBallStable().schedule();
     }
   }
 
@@ -78,10 +83,19 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     // sequence of running: subsystems, buttons, commands
-    NetworkTableInstance.getDefault().getEntry("/odom/video_output").setString(
-        control.isReversed() && !autoIntake.isScheduled() && !manualIntake.isScheduled() ?
-        "shoot":"intake"
-    );
+
+    String streamMode = "";
+    if (manualShoot.isScheduled() || autoShoot.isScheduled())
+      streamMode = "shoot";
+    else if (manualIntake.isScheduled() || autoIntake.isScheduled())
+      streamMode = "intake";
+    else
+      streamMode = control.isReversed()? "shoot":"intake";
+    NetworkTableInstance.getDefault().getEntry("/odom/video_output").setString(streamMode);
+    
+    if (control.isCalibrateField())
+      coprocessor.calibrate_field();
+
     CommandScheduler.getInstance().run();
     NetworkTableInstance.getDefault().flush();
   }
@@ -95,9 +109,6 @@ public class Robot extends TimedRobot {
       driveSubsystem.setOpenLoop(new DriveSignal(0, 0, true));
       return;
     }
-
-    if (control.isCalibrateField())
-      coprocessor.calibrate_field();
 
     // ballHandler
     if (control.isResetBallCnt())

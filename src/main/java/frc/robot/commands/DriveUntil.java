@@ -6,16 +6,18 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Robot;
 
 public class DriveUntil extends CommandBase {
-  private double velocity;
+  private double leftV, rightV;
   private Callable<Boolean> isDone;
 
-  public DriveUntil(double _velocity, Callable<Boolean> _isDone) {
+  public DriveUntil(double _leftV, double _rightV, Callable<Boolean> _isDone) {
     addRequirements(Robot.driveSubsystem);
     isDone = _isDone;
+    leftV = _leftV;
+    rightV = _rightV;
   }
 
   public DriveUntil(double _velocity) {
-    this(_velocity, () -> {return true;});
+    this(_velocity, _velocity, () -> {return false;});
   }
 
   @Override
@@ -25,7 +27,7 @@ public class DriveUntil extends CommandBase {
 
   @Override
   public void execute() {
-    Robot.driveSubsystem.setVelocity(velocity, velocity);
+    Robot.driveSubsystem.setVelocity(leftV, rightV);
   }
 
   @Override

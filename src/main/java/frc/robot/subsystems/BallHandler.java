@@ -78,12 +78,16 @@ public class BallHandler extends SubsystemBase {
     shooterConveyer.setIdleMode(IdleMode.kBrake);
     shooterMaster.setIdleMode(IdleMode.kBrake);
     shooterMaster.setClosedLoopRampRate(0.3);
+    shooterMaster.setSmartCurrentLimit(30);
+    shooterSlave.setSmartCurrentLimit(30);
+    intakeConveyer.burnFlash();
+    shooterMaster.burnFlash();
+    shooterSlave.burnFlash();
   }
 
   @Override
   public void periodic() {
-    // System.out.println(ballIntake.getOutputCurrent());
-    // desiredRPM = Control.getInstance().getSlider() * 1000 + 4600;
+    // desiredRPM = Control.getInstance().getSlider() * 1500 + 4100;
     switch (state) {
       case IDLE:
         ballIntake.set(0);

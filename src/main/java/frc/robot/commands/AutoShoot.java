@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import com.team254.lib.util.InterpolatingDouble;
+import com.team254.lib.util.InterpolatingTreeMap;
 import com.team254.lib.util.TimeDelayedBoolean;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -13,6 +15,8 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 
 public class AutoShoot extends CommandBase {
+  private static final InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble> 
+    dis2rpm = new InterpolatingTreeMap<InterpolatingDouble, InterpolatingDouble>(100);
   public boolean innerGoal;
   private static final double angleP = 1.0 / 40.0, disP = 1;
   private double targetAngle, currentAngle, angleError;
@@ -26,6 +30,16 @@ public class AutoShoot extends CommandBase {
     addRequirements(Robot.driveSubsystem);
     addRequirements(Robot.ballHandler);
     innerGoal = _innerGoal;
+
+    dis2rpm.put(new InterpolatingDouble(3.8), new InterpolatingDouble(4800.0));
+    dis2rpm.put(new InterpolatingDouble(4.4), new InterpolatingDouble(4600.0));
+    dis2rpm.put(new InterpolatingDouble(5.0), new InterpolatingDouble(4700.0));
+    dis2rpm.put(new InterpolatingDouble(5.6), new InterpolatingDouble(4700.0));
+    dis2rpm.put(new InterpolatingDouble(6.4), new InterpolatingDouble(4600.0));
+    dis2rpm.put(new InterpolatingDouble(7.0), new InterpolatingDouble(4700.0));
+    dis2rpm.put(new InterpolatingDouble(8.0), new InterpolatingDouble(4900.0));
+    dis2rpm.put(new InterpolatingDouble(8.6), new InterpolatingDouble(5200.0));
+    dis2rpm.put(new InterpolatingDouble(9.2), new InterpolatingDouble(5500.0));
   }
 
   public AutoShoot() {
@@ -47,8 +61,7 @@ public class AutoShoot extends CommandBase {
       System.out.println("field not calibrated and no target found, cancle AutoShoot");
       isCanceled = true;
     } else if (!Robot.coprocessor.isPoseGood) {
-      System.out.println("shooting without T265 hasn't been implemented");
-      isCanceled = true;
+      System.out.println("shoot without T265");
     } else if (Robot.ballHandler.ballCnt == 0 && !control.isOverrideAutoShoot()) {
       System.out.println("no ball, cancle auto shoot");
       isCanceled = true;
@@ -59,7 +72,8 @@ public class AutoShoot extends CommandBase {
     isDisStable = new TimeDelayedBoolean(0.4);
     minDis = innerGoal ? Constants.INNER_MIN_SHOOT_DIS : Constants.OUTER_MIN_SHOOT_DIS;
     maxDis = innerGoal ? Constants.INNER_MAX_SHOOT_DIS : Constants.OUTER_MAX_SHOOT_DIS;
-    if (Robot.coprocessor.targetDis > maxDis || Robot.coprocessor.targetDis < minDis){
+    if (Robot.coprocessor.isPoseGood &&
+      (Robot.coprocessor.targetDis > maxDis || Robot.coprocessor.targetDis < minDis)){
       isChangeDis = true;
       System.out.println("change of distance required");
     }
@@ -74,6 +88,10 @@ public class AutoShoot extends CommandBase {
     targetAngle = Robot.coprocessor.targetFieldTheta;
     currentAngle = Robot.coprocessor.fieldTheta;
     targetAngle -= Constants.SHOOTER_ANGLE;
+    if (!Robot.coprocessor.isPoseGood) {
+      targetAngle = Robot.coprocessor.targetRelativeDirLeft;
+      currentAngle = 0;
+    }
     if (innerGoal)
       targetAngle -= Robot.coprocessor.innerAngleDelta;
 
@@ -142,13 +160,16 @@ public class AutoShoot extends CommandBase {
   }
 
   public boolean isFinished() {
+    if (!Robot.coprocessor.isPoseGood && !Robot.coprocessor.isTargetFound)
+      return true;
     return isCanceled || (isDone.get() && !control.isOverrideAutoShoot());
   }
 
   private double calculateRPM(double dis) {
-    if (dis < 5)
-      return 5150;
-    else 
-      return Math.max(5550, 5150 + 200 * (dis - 5));
+    return dis2rpm.getInterpolated(new InterpolatingDouble(dis)).value;
+    // if (dis < 5)
+    //   return 5150 - 150;
+    // else 
+    //   return Math.max(5550, 5150 + 200 * (dis - 5)) - 150;
   } 
 }

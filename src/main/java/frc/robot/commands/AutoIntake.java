@@ -9,18 +9,19 @@ import frc.robot.subsystems.BallHandler.BallHandlerState;
 public class AutoIntake extends CommandBase {
   private static final double angleP = 1.0 / 60.0;
 
-  private boolean isCanceled;
+  private boolean isCanceled, quitWithoutBall;
   private int targetBallCnt;
   private Control control = Control.getInstance();
 
-  public AutoIntake(int _targetBallCnt) {
+  public AutoIntake(int _targetBallCnt, boolean _quiteWithoutBall) {
     targetBallCnt = _targetBallCnt;
+    quitWithoutBall = _quiteWithoutBall;
     addRequirements(Robot.driveSubsystem);
     addRequirements(Robot.ballHandler);
   }
 
   public AutoIntake() {
-    this(5);
+    this(5, false);
   }
 
   @Override
@@ -48,6 +49,10 @@ public class AutoIntake extends CommandBase {
     }
     double targetAngle = Robot.coprocessor.ballFieldTheta;
     double currentAngle = Robot.coprocessor.fieldTheta;
+    if (!Robot.coprocessor.isPoseGood) {
+      targetAngle = Robot.coprocessor.ballRelativeDirLeft;
+      currentAngle = 0;
+    }
     double angleError = ((targetAngle - currentAngle)%360+360)%360;
     if(angleError>180)
       angleError -= 360;
@@ -77,8 +82,12 @@ public class AutoIntake extends CommandBase {
 
   @Override
   public boolean isFinished() {
-    return (!control.isOverrideAutoIntake() && Robot.ballHandler.ballCnt >= targetBallCnt) 
-           || !Robot.coprocessor.isConnected || !Robot.coprocessor.isBallGood
-           || isCanceled;
+    if (isCanceled)
+      return true;
+    boolean ballFound = Robot.coprocessor.isConnected && Robot.coprocessor.isBallGood && 
+        Robot.coprocessor.isBallFound;
+    if (quitWithoutBall && !ballFound)
+      return true;
+    return !control.isOverrideAutoIntake() && Robot.ballHandler.ballCnt >= targetBallCnt;
   }
 }

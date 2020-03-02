@@ -64,6 +64,12 @@ while True:
         if len(trajectory) == 200:
             draw_trajectory(frame, trajectory)
 
+    if NetworkTables.getEntry("/odom/target_found").getBoolean(False):
+        camera_x = NetworkTables.getEntry("/odom/camera_x").getDouble(1)
+        camera_y = NetworkTables.getEntry("/odom/camera_y").getDouble(1)
+        camera_t = NetworkTables.getEntry("/odom/camera_t").getDouble(1) + 180
+        draw_robot(frame, camera_x, camera_y, camera_t, (150, 0, 150), 0.5)
+
     frame = cv2.resize(frame, (400, 200))
     cv2.imshow("visual", frame)
     cv2.waitKey(10)

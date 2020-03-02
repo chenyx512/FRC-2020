@@ -60,9 +60,19 @@ public class Coprocessor extends SubsystemBase {
       // law of sine
       innerAngleDelta = Math.toDegrees(Math.asin(0.74 * 
           Math.sin(Math.toRadians(-targetFieldTheta)) / innerDis));
+      if (Math.abs(innerAngleDelta) > 1)
+        innerAngleDelta = Math.signum(innerAngleDelta) * 1;
       // actual_target = target_theta - delta
       // System.out.printf("%.2f %.2f\n", innerDis, innerAngleDelta); 
       odomTable.getEntry("inner_target_dis").setDouble(innerDis);
+    }
+    // opposite target detection
+    if(isTargetFound && isPoseGood && isFieldCalibrated() && 
+      Math.abs((Math.toDegrees(Math.atan2(4.4, -15.98)) + 180 - targetFieldTheta)
+      % 360) < 15) {
+      System.out.println("wrong target");
+      isTargetFound = false;
+      targetFieldTheta = Math.atan2(fieldY, fieldX) + 180;
     }
   }
 
