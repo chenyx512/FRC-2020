@@ -28,7 +28,7 @@ public class ManualShoot extends CommandBase {
     // if ballCnt is 0, keep shooting everything
     targetBallCnt = Robot.ballHandler.ballCnt - shootNum;
     Robot.driveSubsystem.setVelocity(0, 0);
-    Robot.ballHandler.desiredRPM = 5000;
+    Robot.ballHandler.desiredRPM = 4700;
     Robot.ballHandler.state = BallHandlerState.SHOOT;
   }
 

@@ -20,6 +20,7 @@ public class Climber extends SubsystemBase {
   private void setSpark(CANSparkMax spark) {
     spark.restoreFactoryDefaults();
     spark.setIdleMode(IdleMode.kBrake);
+    spark.burnFlash();
   }
 }
 
