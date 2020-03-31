@@ -52,7 +52,7 @@ public class Coprocessor extends SubsystemBase {
     ballRelativeDirLeft = odomTable.getEntry("ball_to_left").getDouble(0);
     ballFieldTheta = odomTable.getEntry("ball_field_theta").getDouble(0);
     // solve the triangle between robot, outer target, and inner target
-    if (isTargetFound) {
+    if (isFieldCalibrated() && isTargetGood && isPoseGood && isTargetFound) {
       // law of cos
       innerDis = Math.sqrt(Math.max(0, 
           0.74 * 0.74 + targetDis * targetDis - 
@@ -65,6 +65,8 @@ public class Coprocessor extends SubsystemBase {
       // actual_target = target_theta - delta
       // System.out.printf("%.2f %.2f\n", innerDis, innerAngleDelta); 
       odomTable.getEntry("inner_target_dis").setDouble(innerDis);
+    } else {
+      innerDis = targetDis + 0.3;
     }
     // opposite target detection
     if(isTargetFound && isPoseGood && isFieldCalibrated() && 

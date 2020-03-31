@@ -7,7 +7,7 @@ import frc.robot.Robot;
 import frc.robot.subsystems.BallHandler.BallHandlerState;
 
 public class AutoIntake extends CommandBase {
-  private static final double angleP = 1.0 / 60.0;
+  private static final double angleP = 1.0 / 40.0;
 
   private boolean isCanceled, quitWithoutBall;
   private int targetBallCnt;

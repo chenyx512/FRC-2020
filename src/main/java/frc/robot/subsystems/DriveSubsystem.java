@@ -135,7 +135,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void setVelocity(final double leftMPS, final double rightMPS) {
     // double LActual = leftEncoder.getVelocity() / Constants.RPMpMPS;
     // System.out.printf("L want %7.2f get %7.2f err %7.2f\n", leftMPS, LActual, leftMPS - LActual);
-    // System.out.printf("%f %f\n", leftMPS, rightMPS);
+    System.out.printf("%f %f\n", leftMPS, rightMPS);
     if (driveControlState == DriveControlState.OPEN_LOOP) {
       setBrakeMode(true);
       driveControlState = DriveControlState.VELOCITY_CONTROL;
@@ -168,8 +168,10 @@ public class DriveSubsystem extends SubsystemBase {
 
   private void setSpark(final CANSparkMax spark) {
     spark.restoreFactoryDefaults();
-    spark.setOpenLoopRampRate(0.5);
-    spark.setClosedLoopRampRate(0.5);
+    spark.setOpenLoopRampRate(0.4);
+    spark.setClosedLoopRampRate(0.4);
+    // spark.enableVoltageCompensation(12.0);
+    spark.setSmartCurrentLimit(40);
   }
 
   private void setPID(final CANPIDController controller){

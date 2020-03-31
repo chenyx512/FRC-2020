@@ -5,11 +5,12 @@ import java.util.concurrent.Executors;
 
 import com.team254.lib.util.DriveSignal;
 
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import frc.robot.commands.*;
@@ -34,10 +35,12 @@ public class Robot extends TimedRobot {
 
   private static Control control = Control.getInstance();
   private static AutoShoot autoShoot = new AutoShoot(false);
-  private static ManualShoot manualShoot = new ManualShoot();
+  private static ManualShoot manualShoot = new ManualShoot(3);
   private static AutoIntake autoIntake = new AutoIntake();
   private static ManualIntake manualIntake = new ManualIntake();
   private static Eject eject = new Eject();
+  private static UsbCamera camera = null;
+  private static final SendableChooser<Command> autonomousChooser = new SendableChooser<>();
 
   private static PanelTurnPositionControl positionControl = 
       new PanelTurnPositionControl();
@@ -48,6 +51,13 @@ public class Robot extends TimedRobot {
     ballHandler.setDefaultCommand(new HandleBallWithJoystick());
     climber.setDefaultCommand(new ClimbWithJoystick());
     panelTurner.setDefaultCommand(new TurnPanelWithJoystick());
+
+    autonomousChooser.setDefaultOption("seven_trench_stable", new SevenBallStable());
+    autonomousChooser.addOption("steal_one_seven_ball", new StealOneSevenBall());
+    autonomousChooser.addOption("six_trench", new SixBall());
+    autonomousChooser.addOption("six_bar", new SixBallBar());
+    // autonomousChooser.addOption("move_forward", new DriveUntil(1).withTimeout(2));
+    SmartDashboard.putData("Auto choices", autonomousChooser);
   }
 
   @Override
@@ -73,7 +83,7 @@ public class Robot extends TimedRobot {
     } else if (!coprocessor.isPoseGood) {
       new SixBall().schedule();
     } else {
-      new SevenBallStable().schedule();
+      autonomousChooser.getSelected().schedule();
     }
   }
 
@@ -85,9 +95,9 @@ public class Robot extends TimedRobot {
     // sequence of running: subsystems, buttons, commands
 
     String streamMode = "";
-    if (manualShoot.isScheduled() || autoShoot.isScheduled())
+    if (ballHandler.state == BallHandlerState.SHOOT || ballHandler.state == BallHandlerState.PRESPIN)
       streamMode = "shoot";
-    else if (manualIntake.isScheduled() || autoIntake.isScheduled())
+    else if (ballHandler.state == BallHandlerState.INTAKE)
       streamMode = "intake";
     else
       streamMode = control.isReversed()? "shoot":"intake";
@@ -128,6 +138,12 @@ public class Robot extends TimedRobot {
     else if(control.isEject())
       eject.schedule();
 
+    if (control.getHookSpeed() > 0.1 && camera == null) {
+      camera = CameraServer.getInstance().startAutomaticCapture();
+      camera.setResolution(320, 240);
+      camera.setFPS(20);
+    }
+    
     // PanelTurner
     if (control.isPositionControl())
       positionControl.schedule();
