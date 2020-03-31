@@ -14,7 +14,9 @@ public class Climber extends SubsystemBase {
   
   public Climber() {
     setSpark(winch);
+    winch.setSmartCurrentLimit(40);
     setSpark(hook);
+    hook.setSmartCurrentLimit(30);
   }
 
   private void setSpark(CANSparkMax spark) {

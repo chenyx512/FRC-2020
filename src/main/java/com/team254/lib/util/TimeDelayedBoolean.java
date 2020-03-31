@@ -22,7 +22,11 @@ public class TimeDelayedBoolean {
         return get();
     }
 
+    public boolean get(double time) {
+        return m_old && (time - lastTrueTime) >= timeout;
+    }
+
     public boolean get() {
-        return m_old && (Timer.getFPGATimestamp() - lastTrueTime) >= timeout;
+        return get(Timer.getFPGATimestamp());
     }
 }

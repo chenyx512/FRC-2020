@@ -31,15 +31,14 @@ public class AutoShoot extends CommandBase {
     addRequirements(Robot.ballHandler);
     innerGoal = _innerGoal;
 
-    dis2rpm.put(new InterpolatingDouble(3.8), new InterpolatingDouble(4800.0));
-    dis2rpm.put(new InterpolatingDouble(4.4), new InterpolatingDouble(4600.0));
-    dis2rpm.put(new InterpolatingDouble(5.0), new InterpolatingDouble(4700.0));
-    dis2rpm.put(new InterpolatingDouble(5.6), new InterpolatingDouble(4700.0));
-    dis2rpm.put(new InterpolatingDouble(6.4), new InterpolatingDouble(4600.0));
-    dis2rpm.put(new InterpolatingDouble(7.0), new InterpolatingDouble(4700.0));
-    dis2rpm.put(new InterpolatingDouble(8.0), new InterpolatingDouble(4900.0));
-    dis2rpm.put(new InterpolatingDouble(8.6), new InterpolatingDouble(5200.0));
-    dis2rpm.put(new InterpolatingDouble(9.2), new InterpolatingDouble(5500.0));
+    dis2rpm.put(new InterpolatingDouble(3.4), new InterpolatingDouble(5340.0));
+    dis2rpm.put(new InterpolatingDouble(4.1), new InterpolatingDouble(5340.0));
+    dis2rpm.put(new InterpolatingDouble(4.6), new InterpolatingDouble(5100.0));
+    dis2rpm.put(new InterpolatingDouble(5.9), new InterpolatingDouble(4940.0));
+    dis2rpm.put(new InterpolatingDouble(6.4), new InterpolatingDouble(5000.0));
+    dis2rpm.put(new InterpolatingDouble(7.35), new InterpolatingDouble(5100.0));
+    dis2rpm.put(new InterpolatingDouble(7.8), new InterpolatingDouble(5300.0));
+    dis2rpm.put(new InterpolatingDouble(8.6), new InterpolatingDouble(5600.0));
   }
 
   public AutoShoot() {
@@ -106,6 +105,8 @@ public class AutoShoot extends CommandBase {
     SmartDashboard.putNumber("auto_shoot/error", angleError);
     
     double angleSpeed = angleP * angleError;
+    if (Math.abs(angleSpeed) > 1.2)
+      angleSpeed = 1.2 * Math.signum(angleSpeed);
     if (Math.abs(angleError) > 0.4)
       angleSpeed += Math.signum(angleError) * 0.08;
 

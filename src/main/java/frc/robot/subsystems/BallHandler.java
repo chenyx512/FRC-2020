@@ -28,12 +28,12 @@ public class BallHandler extends SubsystemBase {
   public int ballCnt = 0;
   public double desiredRPM;
   
-  private enum ShootingState {
+  public enum ShootingState {
     HOLD,
     SHOOT
   }
   private BallHandlerState lastState = state;
-  private ShootingState shootingState = ShootingState.HOLD;
+  public ShootingState shootingState = ShootingState.HOLD;
   // shooter
   private CANSparkMax shooterMaster = new CANSparkMax(31, MotorType.kBrushless);
   private CANSparkMax shooterSlave = new CANSparkMax(32, MotorType.kBrushless);
@@ -64,29 +64,33 @@ public class BallHandler extends SubsystemBase {
     setSpark(intakeConveyer);
 
     ballIntake.setInverted(true);
-    ballIntake.setSmartCurrentLimit(20);
+    ballIntake.setSmartCurrentLimit(30);
     ballIntake.burnFlash();
-    shooterConveyer.setInverted(true);
+
+    intakeConveyer.setIdleMode(IdleMode.kBrake);
+    intakeConveyer.setSmartCurrentLimit(10);
+    intakeConveyer.burnFlash();
+    
     shooterMaster.setInverted(true);
+    shooterMaster.setClosedLoopRampRate(0.3);
+    // shooterMaster.setSmartCurrentLimit(30);
+    // shooterSlave.setSmartCurrentLimit(30);
+    // burning flash somehow causes bug
     shooterSlave.follow(shooterMaster, true);
+    
+    shooterConveyer.setInverted(true);
+    shooterConveyer.setIdleMode(IdleMode.kBrake);
+    shooterConveyer.setSmartCurrentLimit(20);
+    shooterConveyer.burnFlash();
 
     encoder = shooterMaster.getEncoder();
     shooterPIDController = shooterMaster.getPIDController();
     setShooterPID();
-    
-    intakeConveyer.setIdleMode(IdleMode.kBrake);
-    shooterConveyer.setIdleMode(IdleMode.kBrake);
-    shooterMaster.setIdleMode(IdleMode.kBrake);
-    shooterMaster.setClosedLoopRampRate(0.3);
-    shooterMaster.setSmartCurrentLimit(30);
-    shooterSlave.setSmartCurrentLimit(30);
-    intakeConveyer.burnFlash();
-    shooterMaster.burnFlash();
-    shooterSlave.burnFlash();
   }
 
   @Override
   public void periodic() {
+    // System.out.println(ballIntake.getOutputCurrent());
     // desiredRPM = Control.getInstance().getSlider() * 1500 + 4100;
     switch (state) {
       case IDLE:
@@ -99,11 +103,11 @@ public class BallHandler extends SubsystemBase {
       
       case PRESPIN:
         ballIntake.set(0);
-        intakeConveyer.set(0);
+        intakeConveyer.set(ballCnt <= 3 || Control.getInstance().isOverride()? 1 : 0);
         shooterConveyer.set(shooterBeamBreaker.get() == NO_BALL? 1 : 0);
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity,
             0, Constants.SHOOTER_KS);
-        isFreeSpinning.update(true);
+        isFreeSpinning.update(false);
         break;
 
       case SHOOT:
@@ -127,7 +131,7 @@ public class BallHandler extends SubsystemBase {
         ballIntake.set(0);
         // run intake conveyer to make sure the last ball gets shot
         // but not when there are too many balls to prevent jamming
-        intakeConveyer.set(ballCnt <= 2 || Control.getInstance().isOverride()? 1 : 0);
+        intakeConveyer.set(ballCnt <= 3 || Control.getInstance().isOverride()? 1 : 0);
         shooterConveyer.set(shootingState == ShootingState.SHOOT || 
                             shooterBeamBreaker.get() == NO_BALL? 1 : 0);
         shooterPIDController.setReference(desiredRPM, ControlType.kVelocity,
@@ -138,7 +142,8 @@ public class BallHandler extends SubsystemBase {
       case INTAKE:
         ballIntake.set(1);
         intakeConveyer.set(1);
-        shooterConveyer.set(shooterBeamBreaker.get() == BALL? 0 : 1);
+        shooterConveyer.set(
+          shooterBeamBreaker.get() == NO_BALL && ballCnt >= 3? 1 : 0);
         shooterMaster.set(0);
         isFreeSpinning.update(false);
         break;
@@ -146,8 +151,8 @@ public class BallHandler extends SubsystemBase {
       case EJECT:
         ballIntake.set(-1);
         intakeConveyer.set(-1);
-        shooterConveyer.set(-1);
-        shooterPIDController.setReference(-1000, ControlType.kVelocity,
+        shooterConveyer.set(0);
+        shooterPIDController.setReference(4000, ControlType.kVelocity,
             0, 1);
         break;
     }
@@ -173,12 +178,8 @@ public class BallHandler extends SubsystemBase {
       ballCnt --;
     lastIntakeBeam = intakeBeamBreaker.get();
 
-    if (lastShooterBeam == BALL && shooterBeamBreaker.get() == NO_BALL &&
-        state != BallHandlerState.EJECT)
+    if (lastShooterBeam == BALL && shooterBeamBreaker.get() == NO_BALL)
       ballCnt --;
-    if (lastShooterBeam == NO_BALL && shooterBeamBreaker.get() == BALL &&
-        state == BallHandlerState.EJECT)
-      ballCnt ++;
     lastShooterBeam = shooterBeamBreaker.get();
     
     if(ballCnt > 5) 

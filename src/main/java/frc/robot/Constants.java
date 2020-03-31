@@ -39,7 +39,7 @@ public class Constants {
   public static final int DRIVETRAIN_VELOCITY_SLOT = 0;
   
   // shooter sparks
-  public static final Gains SHOOTER_V_GAINS = new Gains(5e-5, 1.4e-8, 0, 1.0 / 5700, 100, 1);
+  public static final Gains SHOOTER_V_GAINS = new Gains(2e-4, 1e-8, 0, 1.0 / 5700, 300, 1);
   public static final double SHOOTER_KS = 0; // TODO actually tune this
 
   // Ramsete
@@ -49,14 +49,14 @@ public class Constants {
   // AutoShoot
   public static final double MAX_SHOOT_ANGLE_ERROR = 1.5;
   public static final double AUTO_SHOOT_HOLD_TIME = 0.5;
-  public static final double MAX_SHOOT_RPM_ERROR = 80;
-  public static final double SHOOTER_ANGLE = 2.2; // deg to the left from center line
+  public static final double MAX_SHOOT_RPM_ERROR = 200;
+  public static final double SHOOTER_ANGLE = 3.7; // deg to the left from center line
   public static final double MIN_SHOOT_GAP_TIME = 0.35; // 0.35
-  public static final double MAX_SHOOTER_FREE_SPIN_TIME = 1;
-  public static final double OUTER_MIN_SHOOT_DIS = 3.7;
-  public static final double OUTER_MAX_SHOOT_DIS = 8;
-  public static final double INNER_MIN_SHOOT_DIS = 3.7;
-  public static final double INNER_MAX_SHOOT_DIS = 4.7;
+  public static final double MAX_SHOOTER_FREE_SPIN_TIME = 1.5;
+  public static final double OUTER_MIN_SHOOT_DIS = 4.1;
+  public static final double OUTER_MAX_SHOOT_DIS = 9.5;
+  public static final double INNER_MIN_SHOOT_DIS = 4;
+  public static final double INNER_MAX_SHOOT_DIS = 5;
 
   public static class Gains {
     public final double kP;

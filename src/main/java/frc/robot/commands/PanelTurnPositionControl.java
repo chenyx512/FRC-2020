@@ -31,7 +31,7 @@ public class PanelTurnPositionControl extends CommandBase {
     finishTurn = 
         Robot.panelTurner.wheelEncoder.getPosition() > desiredEncoderPosition;
     if (!finishTurn) {
-      Robot.panelTurner.wheel.set(0.2);
+      Robot.panelTurner.wheel.set(0.24);
       Robot.driveSubsystem.setOpenLoop(new DriveSignal(0, 0, true));
     } else {
       Robot.panelTurner.wheel.set(0);
